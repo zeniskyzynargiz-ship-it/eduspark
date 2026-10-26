@@ -16,6 +16,7 @@ export function SiteFooter({ d }: { d: Dict }) {
         <Link href="/science" className="hover:text-leaf-700">{d.nav.science}</Link>
         <Link href="/addie" className="hover:text-leaf-700">{d.nav.addie}</Link>
         <Link href="/sample-lesson" className="hover:text-leaf-700">{d.nav.sample}</Link>
+        <Link href="/about" className="hover:text-leaf-700">{d.nav.about}</Link>
       </nav>
       <LangSwitch compact />
     </footer>

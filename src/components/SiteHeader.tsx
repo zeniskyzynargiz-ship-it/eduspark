@@ -17,6 +17,7 @@ export function SiteHeader({ transparent = false, loggedIn = false }: { transpar
     { href: "/science", label: d.nav.science },
     { href: "/addie", label: d.nav.addie },
     { href: "/sample-lesson", label: d.nav.sample },
+    { href: "/about", label: d.nav.about },
   ];
   const loginHref = loggedIn ? "/teacher" : "/auth/login";
   const loginLabel = loggedIn ? d.nav.cabinet : d.nav.login;
