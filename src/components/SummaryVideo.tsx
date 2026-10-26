@@ -484,11 +484,16 @@ export function SummaryVideo({
       ctx.fillStyle = "#17652f";
       ctx.fillText(head, 100 - slideIn, 218);
       ctx.fillStyle = "#13261a";
+      // Long captions get a smaller font so they never run into the mascot.
       ctx.font = "700 44px 'Noto Serif', Georgia, serif";
+      const fullLines = wrap(ctx, s.text, textW).length;
+      const size = fullLines > 4 ? (fullLines > 5 ? 32 : 38) : 44;
+      const lh = Math.round(size * 1.36);
+      ctx.font = `700 ${size}px 'Noto Serif', Georgia, serif`;
       // typewriter: the caption appears word by word
       const words = s.text.split(/\s+/);
       const shown = words.slice(0, Math.max(1, Math.ceil(words.length * ease((local - 0.3) / 2.2)))).join(" ");
-      wrap(ctx, shown, textW).slice(0, 6).forEach((l, i) => ctx.fillText(l, 100 - slideIn, 300 + i * 60));
+      wrap(ctx, shown, textW).slice(0, 6).forEach((l, i) => ctx.fillText(l, 100 - slideIn, 300 + i * lh));
       ctx.globalAlpha = 1;
       if (s.table?.length) drawTable(ctx, s.table, 790, 270, 410, local);
       else if (s.chart?.length) drawChart(ctx, s.chart, 800, 290, 400, local, "—");
