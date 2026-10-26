@@ -57,6 +57,8 @@ export async function registerAction(_: AuthState, fd: FormData): Promise<AuthSt
   }
   // With email confirmation on, an existing address returns a user with no identities.
   if (data.user && (data.user.identities?.length ?? 0) === 0) return { error: "exists" };
+  // With email confirmation off, Supabase signs the teacher in right away.
+  if (data.session) redirect("/teacher");
   redirect(`/auth/check-email?email=${encodeURIComponent(email)}`);
 }
 

@@ -93,7 +93,7 @@ export const en: typeof kk = {
     outcomes: "Expected outcomes",
   },
   auth: {
-    registerTitle: "Sign up as a teacher", registerSub: "After signing up you will get a confirmation email.",
+    registerTitle: "Sign up as a teacher", registerSub: "After signing up you go straight to your cabinet.",
     loginTitle: "Teacher log in", fullName: "Full name", fullNamePh: "For example: Aigul Serikkyzy",
     email: "Email", password: "Password", password2: "Repeat password",
     show: "Show", hide: "Hide", passwordHint: "At least 8 characters, with letters and numbers.",
