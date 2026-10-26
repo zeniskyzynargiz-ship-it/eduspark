@@ -6,7 +6,7 @@ import { allowedNumbers, type SummaryFacts } from "../summary-facts";
 const BiText = (max: number) => z.object({ kk: z.string().trim().min(1).max(max), en: z.string().trim().min(1).max(max) });
 const ScriptSchema = z.object({
   title: BiText(70),
-  slides: z.array(z.object({ label: BiText(40), text: BiText(170) })).min(4).max(6),
+  slides: z.array(z.object({ label: BiText(40), text: BiText(200) })).min(5).max(6),
 });
 export type SummaryScript = z.infer<typeof ScriptSchema>;
 
@@ -28,8 +28,12 @@ Use ONLY the facts in the JSON you receive. Never invent scores, numbers, names,
 Return ONE JSON object, no prose:
 {"title": {"kk": "...", "en": "..."},
  "slides": [ {"label": {"kk": "...", "en": "..."}, "text": {"kk": "...", "en": "..."}} ]}
-Exactly 5 slides in this order: 1) what the lesson / chosen direction was, 2) work completed, 3) what went well, 4) what needs more support, 5) a concrete next step.
-label: at most 4 words. text: one or two short sentences, at most 150 characters. "kk" is natural Kazakh (Cyrillic), "en" is simple English.`;
+${
+    scope === "student"
+      ? `Exactly 6 slides in this order: 1) the lesson and the chosen interest, 2) work completed, 3) task-by-task results (which task numbers were fully right, partly right or wrong; tasks with "points": null are not graded yet), 4) what went well, 5) where mistakes happened: name the task numbers that lost points and the skill they practise, kindly and concretely (if none lost points, celebrate it), 6) a concrete next step plus one short motivating sentence.`
+      : `Exactly 5 slides in this order: 1) work completed by the class, 2) how far the class reached the objective, 3) the class strength, 4) what needs more support, 5) a concrete next step for the next lesson.`
+  }
+label: at most 4 words. text: one or two short sentences, at most 180 characters. "kk" is natural Kazakh (Cyrillic), "en" is simple English.`;
 }
 
 /** Throws if the script mentions a number that is not in the facts. */
@@ -46,6 +50,7 @@ export async function generateSummaryScript(facts: SummaryFacts): Promise<Summar
   const text = await callAI(systemPrompt(facts.scope), JSON.stringify({ facts }), 3000);
   const parsed = ScriptSchema.safeParse(extractJson(text));
   if (!parsed.success) throw new AIError("invalid_output", parsed.error.issues[0]?.message ?? "bad script");
+  if (parsed.data.slides.length !== (facts.scope === "student" ? 6 : 5)) throw new AIError("invalid_output", "Wrong number of slides");
   checkNumbers(parsed.data, facts);
   return parsed.data;
 }

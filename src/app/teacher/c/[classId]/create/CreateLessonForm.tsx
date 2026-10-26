@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, PenLine } from "lucide-react";
 import { useLang } from "@/lib/i18n/client";
 import { Notice } from "@/components/Shared";
 
@@ -30,9 +30,11 @@ export function CreateLessonForm({ classId }: { classId: string }) {
     } catch {}
   }, [f, storeKey]);
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent, manual = false) {
     e.preventDefault();
     if (busy) return;
+    const form = (e.target as HTMLElement).closest("form");
+    if (form && !form.reportValidity()) return;
     setBusy(true);
     setError(null);
     try {
@@ -40,14 +42,15 @@ export function CreateLessonForm({ classId }: { classId: string }) {
         const res = await fetch("/api/lessons/generate", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ classId, ...f, idempotencyKey: key.current }),
+          body: JSON.stringify({ classId, ...f, idempotencyKey: key.current, manual }),
         });
         const body = await res.json().catch(() => ({}));
         if (res.ok && body.lessonId) {
           try {
             localStorage.removeItem(storeKey);
           } catch {}
-          router.push(`/teacher/c/${classId}/lessons/${body.lessonId}`);
+          const notice = manual ? "?notice=manual" : body.fallback ? "?notice=template" : "";
+          router.push(`/teacher/c/${classId}/lessons/${body.lessonId}${notice}`);
           return;
         }
         if (res.status === 202) {
@@ -93,9 +96,15 @@ export function CreateLessonForm({ classId }: { classId: string }) {
         <label className="label" htmlFor="requirements">{d.teacher.requirements} <span className="font-normal text-muted">({d.common.optional})</span></label>
         <textarea id="requirements" maxLength={2000} rows={2} className="input" placeholder={d.teacher.requirementsPh} value={f.requirements} onChange={set("requirements")} />
       </div>
-      <button className="btn btn-primary w-full sm:w-auto" disabled={busy}>
-        {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />} {busy ? d.common.loading : d.teacher.generate}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button className="btn btn-primary w-full sm:w-auto" disabled={busy}>
+          {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />} {busy ? d.common.loading : d.teacher.generate}
+        </button>
+        <button type="button" className="btn btn-outline w-full sm:w-auto" disabled={busy} onClick={(e) => submit(e, true)}>
+          <PenLine className="w-5 h-5" /> {d.teacher.createManual}
+        </button>
+      </div>
+      <p className="text-xs text-muted">{d.teacher.createManualHint}</p>
       {busy && <p className="text-sm text-muted" aria-live="polite">{d.teacher.generating}</p>}
     </form>
   );

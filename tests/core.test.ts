@@ -81,3 +81,23 @@ test("Kazakh and English dictionaries have the same keys and no empty strings", 
   assert.equal(empties(kk), false);
   assert.equal(empties(en), false);
 });
+
+test("lesson auto-fix repairs typical AI slips", async () => {
+  const { repairLesson, fixLesson } = await import("../src/lib/lesson-fix");
+  const c = demoLesson({ topic: "x", objective: "objective", duration: 45, gradeLevel: "", sourceMaterial: "", requirements: "" }, empty, ["sport", "music", "games"]);
+  const bad = structuredClone(c) as unknown as Record<string, any>;
+  bad.stages[0].minutes += 7; // minutes do not add up
+  bad.variants[1].tasks[0].points += 2; // uneven variants
+  bad.criteria[0].descriptors[0].points += 3; // descriptor sum off
+  bad.variants[2].tasks[0].criterion_id = "nope"; // unknown criterion
+  bad.homework = "Write about your hobby"; // plain string instead of {kk, en}
+  bad.variants[0].tasks[1].instruction = { kk: "", en: "Match" }; // missing Kazakh
+  bad.variants[0].interest = "Sport"; // wrong case
+  const r = repairLesson(bad, 45);
+  assert.ok(r.ok, r.ok ? "" : r.errors.join("\n"));
+  // Teacher edit: deleting a task from one variant still saves.
+  const edited = structuredClone(c);
+  edited.variants[1].tasks.splice(0, 1);
+  const fixed = fixLesson(edited, 45);
+  assert.ok(validateLesson(fixed, 45).length <= 1);
+});

@@ -85,9 +85,13 @@ async function once(c: AIConfig, system: string, user: string, maxTokens: number
 }
 
 /** One logical request. Retries only on rate limit / transient errors, at most twice. */
-export async function callAI(system: string, user: string, maxTokens = 8000): Promise<string> {
-  const c = aiConfig();
-  if (!c) throw new AIError("not_configured", "AI provider is not configured");
+export async function callAI(system: string, user: string, maxTokens = 8000, deadline?: number): Promise<string> {
+  const base = aiConfig();
+  if (!base) throw new AIError("not_configured", "AI provider is not configured");
+  // A deadline (ms timestamp) shortens the timeout so the whole request fits the route time limit.
+  const left = deadline ? deadline - Date.now() : Infinity;
+  if (left < 15_000) throw new AIError("timeout", "No time left for another AI call");
+  const c = { ...base, timeoutMs: Math.min(base.timeoutMs, left) };
   let last: AIError | null = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
@@ -95,6 +99,7 @@ export async function callAI(system: string, user: string, maxTokens = 8000): Pr
     } catch (e) {
       last = e as AIError;
       if (last.code === "timeout" || last.code === "invalid_output") break;
+      if (deadline && deadline - Date.now() < 20_000) break;
       await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
     }
   }

@@ -14,9 +14,9 @@ export default async function StudentSummaryPage({ params, searchParams }: { par
   const { d, lang } = await getDict();
   const r = await studentFacts(st, lessonId);
   if (!r) notFound();
-  const { lesson, assignment: a, content, sc } = r;
+  const { lesson, assignment: a, content, sc, released } = r;
   const enough = sc.answered > 0;
-  const slides = studentSlides(d, lang, { interest: a.variant_key, done: sc.answered, total: sc.total, byCrit: sc.byCrit, criteria: content.criteria, image: INTEREST_IMG[a.variant_key] });
+  const slides = studentSlides(d, lang, { interest: a.variant_key, done: sc.answered, total: sc.total, byCrit: sc.byCrit, criteria: content.criteria, image: INTEREST_IMG[a.variant_key], tasks: sc.perTask, released });
 
   return (
     <StudentShell st={st} d={d}>

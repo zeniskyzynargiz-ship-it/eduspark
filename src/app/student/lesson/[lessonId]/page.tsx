@@ -22,7 +22,7 @@ export default async function StudentLessonPage({ params }: { params: Promise<{ 
     db.from("responses").select("task_id, answer, auto_score, teacher_score, teacher_comment").eq("assignment_id", a.id),
     db.from("reflections").select("interest, confidence, learned, difficult").eq("assignment_id", a.id).maybeSingle(),
   ]);
-  const released = lesson.feedback_released;
+  const released = lesson.feedback_released || !!(a as { feedback_released?: boolean }).feedback_released;
   const tasks = a.content.tasks as Task[];
   const responses: Record<string, RunnerResponse> = {};
   for (const r of rs ?? []) {

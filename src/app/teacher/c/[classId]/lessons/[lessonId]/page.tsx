@@ -23,8 +23,9 @@ const IMG: Record<string, string> = {
   technology: "/images/interest-tech-robot.webp",
 };
 
-export default async function LessonPage({ params }: { params: Promise<{ classId: string; lessonId: string }> }) {
+export default async function LessonPage({ params, searchParams }: { params: Promise<{ classId: string; lessonId: string }>; searchParams: Promise<{ notice?: string }> }) {
   const { classId, lessonId } = await params;
+  const { notice } = await searchParams;
   const { sb, lesson, cls } = await requireLesson(classId, lessonId);
   const { d, lang } = await getDict();
   const c = lesson.content;
@@ -56,6 +57,8 @@ export default async function LessonPage({ params }: { params: Promise<{ classId
         }
       />
 
+      {notice === "template" && <div className="mb-4"><Notice tone="warn">{d.teacher.templateNotice}</Notice></div>}
+      {notice === "manual" && <div className="mb-4"><Notice>{d.teacher.manualNotice}</Notice></div>}
       {/* Status flow: draft -> approved -> published -> completed */}
       <div className="card p-4 mb-4">
         <ol className="flex flex-wrap items-center gap-2 text-sm">

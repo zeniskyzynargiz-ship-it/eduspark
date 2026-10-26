@@ -6,6 +6,7 @@ import { classCode, personalCode } from "@/lib/codes";
 import { LessonContentSchema, validateLesson, type LessonContent, type Task } from "@/lib/lesson";
 import { pickVariant, type SurveyRow } from "@/lib/profile";
 import { buildAssignmentContent } from "@/lib/assignment";
+import { fixLesson } from "@/lib/lesson-fix";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 const id = (v: unknown) => {
@@ -184,12 +185,14 @@ export async function saveLessonContentAction(_: ActionResult, fd: FormData): Pr
   }
   const parsed = LessonContentSchema.safeParse(raw);
   if (!parsed.success) return { error: "invalid", detail: parsed.error.issues.slice(0, 10).map((i) => `${i.path.join(".")}: ${i.message}`) };
-  const problems = validateLesson(parsed.data, lesson.duration_min);
+  // Minutes, points and descriptor sums are re-balanced automatically, so a removed or added task does not block saving.
+  const content = fixLesson(parsed.data, lesson.duration_min);
+  const problems = validateLesson(content, lesson.duration_min);
   if (problems.length) return { error: "invalid", detail: problems };
   const version = lesson.version + 1;
-  await sb.from("lesson_versions").insert({ lesson_id: lessonId, version, content: parsed.data, note: "teacher edit" });
+  await sb.from("lesson_versions").insert({ lesson_id: lessonId, version, content, note: "teacher edit" });
   // Any edit needs a fresh approval before publishing.
-  await sb.from("lessons").update({ content: parsed.data, version, status: "draft", updated_at: new Date().toISOString() }).eq("id", lessonId);
+  await sb.from("lessons").update({ content, version, status: "draft", updated_at: new Date().toISOString() }).eq("id", lessonId);
   revalidatePath(lessonPath(lesson));
   return { ok: true };
 }
@@ -272,6 +275,14 @@ export async function releaseFeedbackAction(fd: FormData) {
   const { sb, lesson } = await ownLesson(lessonId);
   await sb.from("lessons").update({ feedback_released: fd.get("release") === "1" }).eq("id", lessonId);
   revalidatePath(`/teacher/c/${lesson.class_id}`, "layout");
+}
+
+/** Sends (or takes back) the grades of one student. */
+export async function releaseStudentFeedbackAction(fd: FormData) {
+  const { sb } = await requireTeacher();
+  const aid = id(fd.get("assignment_id"));
+  await sb.from("assignments").update({ feedback_released: fd.get("release") === "1" }).eq("id", aid);
+  revalidatePath(`/teacher`, "layout");
 }
 
 export async function setModeAction(fd: FormData) {

@@ -16,7 +16,7 @@ export default async function PupilSummaryPage({ params }: { params: Promise<{ c
   const r = await pupilFacts(sb, assignmentId);
   if (!r || r.lesson.class_id !== classId) notFound();
   const name = `${r.student?.first_name ?? ""} ${r.student?.last_name ?? ""}`.trim();
-  const slides = studentSlides(d, lang, { interest: r.assignment.variant_key, done: r.sc.answered, total: r.sc.total, byCrit: r.sc.byCrit, criteria: r.content.criteria, image: INTEREST_IMG[r.assignment.variant_key] });
+  const slides = studentSlides(d, lang, { interest: r.assignment.variant_key, done: r.sc.answered, total: r.sc.total, byCrit: r.sc.byCrit, criteria: r.content.criteria, image: INTEREST_IMG[r.assignment.variant_key], tasks: r.sc.perTask, released: true });
   return (
     <>
       <Link href={`/teacher/c/${classId}/results?lesson=${r.lesson.id}`} className="btn btn-ghost btn-sm mb-2"><ArrowLeft className="w-4 h-4" /> {d.teacher.sections.results}</Link>

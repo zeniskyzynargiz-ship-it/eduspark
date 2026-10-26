@@ -76,3 +76,58 @@ export function partSystemPrompt(part: string) {
 export function writingSystemPrompt() {
   return `You help an English teacher pre-assess a short student answer. You only suggest; the teacher decides. Judge only against the given criterion descriptors and the task. Be kind and specific. Return ONE JSON object: {"score": number, "feedback": {"kk": "...", "en": "..."}} where score is between 0 and max_points (half points allowed).`;
 }
+
+// ---------- Generation in parts ----------
+
+export function planSystemPrompt() {
+  return `You are an experienced English teacher and instructional designer using the ADDIE model. You design one lesson for a Kazakhstan school class.
+In THIS step you write the lesson plan and a task plan. The interest-based variants are written later from your task plan.
+${RULES}
+Return ONE JSON object, no prose (Bi = {"kk": "...Kazakh...", "en": "...English..."}):
+{
+  "expected_outcomes": [Bi, ...],
+  "addie_rationale": {"analyze": Bi, "design": Bi, "develop": Bi, "implement": Bi, "evaluate": Bi},
+  "stages": [{"title": Bi, "minutes": int, "teacher_activity": Bi, "student_activity": Bi, "resources": "string", "evidence": Bi}],
+  "criteria": [{"id": "c1", "name": Bi, "descriptors": [{"text": Bi, "points": int}]}],
+  "task_plan": [{"id": "t1", "type": "choice|match|gap|short|voice", "criterion_id": "c1", "points": int, "focus": "what this task practises"}],
+  "common_tasks": [Task, ...],
+  "support": {"vocabulary": [{"en": "word", "kk": "сөз"}], "sentence_frames": ["..."], "explanation": Bi},
+  "reflection_questions": [Bi, ...],
+  "homework": Bi
+}
+task_plan: 3 to 5 individual tasks that EVERY interest variant will have, in this order. Mix closed tasks (choice, match, gap) with at least one open task (short or voice).
+For every criterion: descriptor points = points of task_plan tasks + common_tasks that use that criterion.
+Task (for common_tasks) is one of (each also has "id", "instruction": Bi, "prompt": "English text", "points": int, "criterion_id"):
+  {"type": "pair", "roles": ["Student A: ...", "Student B: ..."]}
+  {"type": "voice", "sample_answer": "..."}
+  {"type": "short", "sample_answer": "..."}
+Keep texts short and clear.`;
+}
+
+export function planUserPrompt(input: LessonInput, profile: ClassProfile, interests: string[]) {
+  return lessonUserPrompt(input, profile, interests);
+}
+
+export function variantSystemPrompt() {
+  return `You write the individual tasks of ONE interest variant of an English lesson for a Kazakhstan school class.
+Follow the task_plan exactly: same number of tasks, same order, same id, type, criterion_id and points. Only the context (texts, examples, names of things) follows the student's interest.
+English is the subject: prompts, texts and options are in English. Instructions and hints are in BOTH Kazakh and English. Never invent names of real students.
+Return ONE JSON object, no prose (Bi = {"kk": "...", "en": "..."}):
+{"context": Bi, "tasks": [Task, ...]}
+Task (each also has "id", "instruction": Bi, "prompt": "English text", "points": int, "criterion_id", optional "hint": Bi):
+  {"type": "choice", "options": ["..."], "correct": [index, ...]}
+  {"type": "match", "pairs": [{"left": "...", "right": "..."}]}   (3-5 pairs)
+  {"type": "gap", "text": "Sentence with ___ for each blank", "answers": [["accepted", "also accepted"], ...]}   (number of ___ = number of answer lists)
+  {"type": "short", "sample_answer": "..."}
+  {"type": "voice", "sample_answer": "..."}`;
+}
+
+export function variantUserPrompt(input: LessonInput, plan: Record<string, unknown>, slots: unknown[], interest: string) {
+  return JSON.stringify({
+    lesson: { topic: input.topic, learning_objective: input.objective, grade_level: input.gradeLevel, source_material: input.sourceMaterial.slice(0, 3000) },
+    interest,
+    criteria: plan.criteria,
+    support: plan.support,
+    task_plan: slots,
+  });
+}

@@ -77,9 +77,17 @@ export default async function SampleLessonPage({ searchParams }: { searchParams:
           slides={[
             { icon: "🎯", label: d.summary.chosen, text: d.interests.sport, image: IMG.sport },
             { icon: "✅", label: d.summary.work, text: d.summary.workText.replace("{done}", "6").replace("{total}", "6"), chart: [{ label: d.summary.work, value: 100 }] },
+            { icon: "📋", label: d.summary.tasksTitle, text: d.summary.tasksText, table: [
+              { label: `1. ${d.teacher.taskTypes.choice}`, mark: "ok", score: "2/2" },
+              { label: `2. ${d.teacher.taskTypes.match}`, mark: "ok", score: "2/2" },
+              { label: `3. ${d.teacher.taskTypes.gap}`, mark: "part", score: "1/2" },
+              { label: `4. ${d.teacher.taskTypes.short}`, mark: "ok", score: "3/3" },
+              { label: `5. ${d.teacher.taskTypes.pair}`, mark: "ok", score: "2/2" },
+              { label: `6. ${d.teacher.taskTypes.voice}`, mark: "bad", score: "0/2" },
+            ] },
             { icon: "⭐", label: d.summary.success, text: d.summary.successText.replace("{name}", pick(lesson.criteria[0].name, lang)), chart: lesson.criteria.map((c, i) => ({ label: pick(c.name, lang), value: [90, 60, 75, 80][i % 4] })) },
-            { icon: "💪", label: d.summary.struggle, text: d.summary.struggleText.replace("{name}", pick(lesson.criteria[1].name, lang)), image: IMG.sport },
-            { icon: "🚀", label: d.summary.nextStep, text: d.summary.nextText.replace("{name}", pick(lesson.criteria[1].name, lang)), image: "/images/hero-book-composition.webp" },
+            { icon: "💪", label: d.summary.mistakes, text: d.summary.mistakesText.replace("{list}", `3 (${d.teacher.taskTypes.gap}), 6 (${d.teacher.taskTypes.voice})`), image: IMG.sport },
+            { icon: "🚀", label: d.summary.nextStep, text: `${d.summary.nextText.replace("{name}", pick(lesson.criteria[1].name, lang))} ${d.summary.motivation.mid}`, image: "/images/hero-book-composition.webp" },
           ]}
         />
       </section>

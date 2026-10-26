@@ -24,6 +24,7 @@ export type SummaryFacts =
       tasks_done: number;
       tasks_total: number;
       scores_released: boolean;
+      tasks: { n: number; type: string; answered: boolean; points: number | null; max: number }[];
       criteria: CritFact[];
       strongest: Bi | null;
       weakest: Bi | null;
@@ -86,7 +87,8 @@ export async function studentFacts(st: StudentCtx, lessonId: string) {
   const { data: rs } = await db.from("responses").select("*").eq("assignment_id", a.id);
   const content = a.content as unknown as { tasks: Task[]; criteria: Criterion[]; interest: string };
   // Scores only count once the teacher has released feedback.
-  const responses = ((rs ?? []) as RespRow[]).map((r) => (lesson.feedback_released ? r : { ...r, auto_score: null, teacher_score: null }));
+  const released = !!lesson.feedback_released || !!(a as { feedback_released?: boolean }).feedback_released;
+  const responses = ((rs ?? []) as RespRow[]).map((r) => (released ? r : { ...r, auto_score: null, teacher_score: null }));
   const sc = scoreAssignment({ content, responses });
   const c = critFacts(sc.byCrit, content.criteria);
   const facts: SummaryFacts = {
@@ -96,12 +98,13 @@ export async function studentFacts(st: StudentCtx, lessonId: string) {
     interest: a.variant_key,
     tasks_done: sc.answered,
     tasks_total: sc.total,
-    scores_released: !!lesson.feedback_released,
+    scores_released: released,
+    tasks: sc.perTask.map((t, i) => ({ n: i + 1, type: t.type, answered: t.answered, points: t.got, max: t.max })),
     criteria: c.list,
     strongest: c.strongest,
     weakest: c.weakest,
   };
-  return { lesson, assignment: a, content, sc, facts };
+  return { lesson, assignment: a, content, sc, facts, released };
 }
 
 /**
@@ -129,6 +132,7 @@ export async function pupilFacts(sb: SupabaseClient, assignmentId: string) {
     tasks_done: sc.answered,
     tasks_total: sc.total,
     scores_released: true,
+    tasks: sc.perTask.map((t, i) => ({ n: i + 1, type: t.type, answered: t.answered, points: t.got, max: t.max })),
     criteria: c.list,
     strongest: c.strongest,
     weakest: c.weakest,
@@ -173,7 +177,10 @@ export function factsHash(f: SummaryFacts) {
 export function allowedNumbers(f: SummaryFacts): Set<string> {
   const nums: number[] = [1, 2, 3, 4, 5, 100];
   for (const c of f.criteria) if (c.percent !== null) nums.push(c.percent);
-  if (f.scope === "student") nums.push(f.tasks_done, f.tasks_total);
+  if (f.scope === "student") {
+    nums.push(f.tasks_done, f.tasks_total, 6);
+    for (const t of f.tasks) nums.push(t.n, t.max, ...(t.points !== null ? [t.points] : []));
+  }
   else {
     nums.push(f.students_total, f.submitted, f.fully_graded, f.reflection.answers);
     if (f.reflection.avg_interest !== null) nums.push(f.reflection.avg_interest);

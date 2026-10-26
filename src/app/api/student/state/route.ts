@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   const cur = stages[l.current_stage];
   return json({
     status: l.status,
-    feedbackReleased: l.feedback_released,
+    feedbackReleased: l.feedback_released || !!(a as { feedback_released?: boolean }).feedback_released,
     stage: cur ? { index: l.current_stage, title: cur.title, minutes: cur.minutes + l.stage_extra_min, startedAt: l.stage_started_at } : null,
     now: new Date().toISOString(),
   });

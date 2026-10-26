@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getTeacher } from "@/lib/supabase/server";
 import { loadClassProfile, variantInterests } from "@/lib/profile";
 import { generateLesson } from "@/lib/ai/generate";
+import { demoLesson } from "@/lib/ai/demo";
 import { AIError } from "@/lib/ai/provider";
 import { buildAddie } from "@/lib/addie";
 import { json, fail } from "@/lib/api";
@@ -16,6 +17,7 @@ const Body = z.object({
   source: z.string().max(6000).default(""),
   requirements: z.string().max(2000).default(""),
   idempotencyKey: z.string().min(16).max(80),
+  manual: z.boolean().default(false),
 });
 
 const STATUS: Record<string, number> = { timeout: 504, rate_limit: 429, provider_error: 502, invalid_output: 502, not_configured: 503 };
@@ -45,7 +47,10 @@ export async function POST(req: Request) {
     const profile = await loadClassProfile(sb, b.classId);
     const interests = variantInterests(profile);
     const input = { topic: b.topic, objective: b.objective, duration: b.duration, gradeLevel: cls.grade_level, sourceMaterial: b.source, requirements: b.requirements };
-    const gen = await generateLesson(input, profile, interests);
+    // "Manual" starts from the editable template with no AI call (no cost).
+    const gen: Awaited<ReturnType<typeof generateLesson>> = b.manual
+      ? { content: demoLesson(input, profile, interests), isDemo: false, provider: null, model: null }
+      : await generateLesson(input, profile, interests);
     const { data: lesson, error } = await sb
       .from("lessons")
       .insert({
@@ -65,12 +70,13 @@ export async function POST(req: Request) {
       .select("id")
       .single();
     if (error || !lesson) throw new AIError("provider_error", "save failed");
-    await sb.from("lesson_versions").insert({ lesson_id: lesson.id, version: 1, content: gen.content, note: gen.isDemo ? "demo" : "ai" });
-    await admin.from("ai_requests").update({ status: "done", lesson_id: lesson.id }).eq("id", reqId);
-    return json({ lessonId: lesson.id, demo: gen.isDemo });
+    await sb.from("lesson_versions").insert({ lesson_id: lesson.id, version: 1, content: gen.content, note: b.manual ? "manual" : gen.fallback ? "template (AI failed)" : gen.isDemo ? "demo" : "ai" });
+    await admin.from("ai_requests").update({ status: "done", lesson_id: lesson.id, error: gen.fallback ?? null, error_detail: gen.fallbackDetail?.slice(0, 1500) ?? null }).eq("id", reqId);
+    return json({ lessonId: lesson.id, demo: gen.isDemo, fallback: !!gen.fallback });
   } catch (e) {
     const code = e instanceof AIError ? e.code : "provider_error";
-    await admin.from("ai_requests").update({ status: "error", error: code }).eq("id", reqId);
+    const detail = e instanceof Error ? e.message.slice(0, 1500) : null;
+    await admin.from("ai_requests").update({ status: "error", error: code, error_detail: detail }).eq("id", reqId);
     return json({ error: code }, STATUS[code] ?? 500);
   }
 }

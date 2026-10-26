@@ -5,7 +5,8 @@ import { useLang } from "@/lib/i18n/client";
 import { pick } from "@/lib/i18n";
 
 export type ChartRow = { label: string; value: number | null };
-export type Slide = { label: string; text: string; image?: string; icon?: string; chart?: ChartRow[] };
+export type TableRow = { label: string; mark: "ok" | "part" | "bad" | "wait" | "none"; score: string };
+export type Slide = { label: string; text: string; image?: string; icon?: string; chart?: ChartRow[]; table?: TableRow[] };
 type Bi = { kk: string; en: string };
 type Script = { title: Bi; slides: { label: Bi; text: Bi }[] };
 
@@ -199,6 +200,40 @@ function drawChart(ctx: CanvasRenderingContext2D, rows: ChartRow[], x: number, y
   });
 }
 
+const MARK: Record<TableRow["mark"], string> = { ok: "✅", part: "🟡", bad: "❌", wait: "⏳", none: "➖" };
+
+/** Task-by-task table: rows slide in one after another with a smiley mark. */
+function drawTable(ctx: CanvasRenderingContext2D, rows: TableRow[], x: number, y: number, w: number, local: number) {
+  const shown = rows.slice(0, 8);
+  const rowH = Math.min(56, 400 / Math.max(1, shown.length));
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  ctx.beginPath();
+  ctx.roundRect(x - 24, y - 40, w + 48, shown.length * rowH + 50, 24);
+  ctx.fill();
+  shown.forEach((r, i) => {
+    const appear = ease((local - 0.4 - i * 0.35) / 0.5);
+    if (appear <= 0) return;
+    const yy = y + i * rowH;
+    ctx.globalAlpha = appear;
+    const dx = (1 - appear) * 40;
+    if (i % 2 === 0) {
+      ctx.fillStyle = "#f2f8f1";
+      ctx.fillRect(x - 10 + dx, yy - rowH * 0.62, w + 20, rowH);
+    }
+    ctx.font = "30px 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif";
+    ctx.fillText(MARK[r.mark], x + dx, yy);
+    ctx.font = "600 24px 'Noto Sans', sans-serif";
+    ctx.fillStyle = "#13261a";
+    ctx.fillText(wrap(ctx, r.label, w - 150)[0] ?? "", x + 50 + dx, yy - 2);
+    ctx.font = "700 24px 'Noto Sans', sans-serif";
+    ctx.fillStyle = r.mark === "bad" ? "#c0492b" : r.mark === "part" ? "#9a6a00" : "#17652f";
+    ctx.textAlign = "right";
+    ctx.fillText(r.score, x + w + dx, yy - 2);
+    ctx.textAlign = "left";
+    ctx.globalAlpha = 1;
+  });
+}
+
 function drawConfetti(ctx: CanvasRenderingContext2D, local: number) {
   const colors = ["#2f8a4a", "#f5b82e", "#d9734e", "#5b9bd5", "#9cca97"];
   for (let i = 0; i < 70; i++) {
@@ -335,10 +370,10 @@ export function SummaryVideo({
       alive = false;
     };
   }, [scriptUrl]);
-  const slides: Slide[] = script
+  const slides: Slide[] = script && script.slides.length === baseSlides.length
     ? script.slides.map((s, i) => ({ ...(baseSlides[i] ?? {}), label: pick(s.label, lang), text: pick(s.text, lang) }))
     : baseSlides;
-  const subtitle = script ? pick(script.title, lang) : baseSubtitle;
+  const subtitle = script && script.slides.length === baseSlides.length ? pick(script.title, lang) : baseSubtitle;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const images = useRef<Record<string, HTMLImageElement>>({});
@@ -435,7 +470,7 @@ export function SummaryVideo({
       const slideIn = (1 - fade) * 50;
       const s = slides[idx];
       const img = s.image ? images.current[s.image] : undefined;
-      const hasSide = !!s.chart?.length || !!(img?.complete && img.naturalWidth);
+      const hasSide = !!s.table?.length || !!s.chart?.length || !!(img?.complete && img.naturalWidth);
       const textW = hasSide ? 620 : W - 340;
       ctx.globalAlpha = fade;
       // label pill with icon
@@ -455,7 +490,8 @@ export function SummaryVideo({
       const shown = words.slice(0, Math.max(1, Math.ceil(words.length * ease((local - 0.3) / 2.2)))).join(" ");
       wrap(ctx, shown, textW).slice(0, 6).forEach((l, i) => ctx.fillText(l, 100 - slideIn, 300 + i * 60));
       ctx.globalAlpha = 1;
-      if (s.chart?.length) drawChart(ctx, s.chart, 800, 290, 400, local, "—");
+      if (s.table?.length) drawTable(ctx, s.table, 790, 270, 410, local);
+      else if (s.chart?.length) drawChart(ctx, s.chart, 800, 290, 400, local, "—");
       else if (img?.complete && img.naturalWidth) {
         const box = 360;
         const pop = ease(local / 0.7);

@@ -1,6 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
-import { Pencil, Save, Trash2 } from "lucide-react";
+import { Pencil, Save, Trash2, Plus } from "lucide-react";
 import { saveLessonContentAction } from "@/app/teacher/actions";
 import { useLang } from "@/lib/i18n/client";
 import { Notice } from "@/components/Shared";
@@ -8,15 +8,29 @@ import type { LessonContent } from "@/lib/lesson";
 
 type J = unknown;
 // Labels for the nested editor, set from the current language when the editor renders.
-let labels = { del: "Delete", confirm: "Delete this item?" };
+let labels = { del: "Delete", confirm: "Delete this item?", add: "Add" };
 const DELETE_LABEL = () => labels.del;
+const ADD_LABEL = () => labels.add;
+
+/** Copy of the last item with a new unique id, as a starting point for a new task, stage, etc. */
+function cloneItem(item: J, all: J[]): J {
+  const copy = structuredClone(item) as Record<string, J>;
+  if (copy && typeof copy === "object" && "id" in copy) {
+    const ids = new Set(all.map((x) => (x as Record<string, J>)?.id));
+    let n = all.length + 1;
+    const base = String(copy.id).replace(/_\d+$/, "");
+    while (ids.has(`${base}_${n}`)) n++;
+    copy.id = `${base}_${n}`;
+  }
+  return copy;
+}
 const DELETE_CONFIRM = () => labels.confirm;
 const LOCKED = new Set(["type", "id", "criterion_id", "interest"]);
 
 /** Simple form editor over the lesson content. Structure (ids, types) stays fixed; texts, points and minutes can change. */
 export function LessonEditor({ lessonId, content }: { lessonId: string; content: LessonContent }) {
   const { d } = useLang();
-  labels = { del: d.common.delete, confirm: d.teacher.deleteConfirm };
+  labels = { del: d.common.delete, confirm: d.teacher.deleteConfirm, add: d.teacher.addItem };
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<J>(content);
   const [state, action, pending] = useActionState(saveLessonContentAction, null);
@@ -90,6 +104,11 @@ function Field({ value, onChange, path, name }: { value: J; onChange: (v: J) => 
             <Field value={item} path={`${path}.${i}`} onChange={(v) => onChange(value.map((x, j) => (j === i ? v : x)))} />
           </div>
         ))}
+        {value.length > 0 && typeof value[value.length - 1] === "object" && value.length < 12 && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange([...value, cloneItem(value[value.length - 1], value)])}>
+            <Plus className="w-4 h-4" /> {ADD_LABEL()}
+          </button>
+        )}
       </div>
     );
   }

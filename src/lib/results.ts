@@ -21,6 +21,7 @@ export type AssignmentFull = {
   status: string;
   mode: string;
   submitted_at: string | null;
+  feedback_released?: boolean;
   content: { tasks: Task[]; criteria: Criterion[]; interest: string };
   students: { first_name: string; last_name: string } | null;
   responses: RespRow[];
@@ -28,7 +29,7 @@ export type AssignmentFull = {
 };
 
 export async function loadLessonWork(sb: SupabaseClient, lessonId: string): Promise<AssignmentFull[]> {
-  const { data: as } = await sb.from("assignments").select("id, student_id, variant_key, status, mode, submitted_at, content, students(first_name, last_name)").eq("lesson_id", lessonId);
+  const { data: as } = await sb.from("assignments").select("id, student_id, variant_key, status, mode, submitted_at, feedback_released, content, students(first_name, last_name)").eq("lesson_id", lessonId);
   const list = (as ?? []) as unknown as Omit<AssignmentFull, "responses" | "reflection">[];
   const ids = list.map((a) => a.id);
   const [{ data: rs }, { data: refl }] = await Promise.all([
@@ -51,6 +52,7 @@ export function scoreAssignment(a: Pick<AssignmentFull, "content" | "responses">
   let max = 0;
   let graded = 0;
   let answered = 0;
+  const perTask: { id: string; type: Task["type"]; got: number | null; max: number; answered: boolean }[] = [];
   for (const t of a.content.tasks) {
     const r = a.responses.find((x) => x.task_id === t.id);
     const s = r ? finalScore(r) : null;
@@ -58,7 +60,9 @@ export function scoreAssignment(a: Pick<AssignmentFull, "content" | "responses">
     c.max += t.points;
     c.tasks += 1;
     max += t.points;
-    if (r && r.answer !== null && r.answer !== undefined) answered += 1;
+    const isAnswered = !!r && r.answer !== null && r.answer !== undefined;
+    if (isAnswered) answered += 1;
+    perTask.push({ id: t.id, type: t.type, got: s, max: t.points, answered: isAnswered });
     if (s !== null) {
       c.got += s;
       c.gradedMax += t.points;
@@ -67,5 +71,5 @@ export function scoreAssignment(a: Pick<AssignmentFull, "content" | "responses">
       graded += 1;
     }
   }
-  return { got, max, graded, total: a.content.tasks.length, answered, byCrit, complete: graded === a.content.tasks.length };
+  return { got, max, graded, total: a.content.tasks.length, answered, byCrit, perTask, complete: graded === a.content.tasks.length };
 }
