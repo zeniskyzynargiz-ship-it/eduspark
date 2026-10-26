@@ -91,12 +91,13 @@ export default async function ResultsPage({ params, searchParams }: { params: Pr
                 title={`${d.summary.teacherTitle}: ${lesson.topic}`}
                 subtitle={cls.name}
                 pdfHref={`/print/lesson/${lesson.id}?type=summary`}
+                scriptUrl={`/api/summary/script?scope=class&lesson=${lesson.id}`}
                 slides={[
-                  { label: d.summary.classDone, text: `${submitted} / ${work.length}` },
+                  { label: d.summary.classDone, text: `${submitted} / ${work.length}`, image: "/images/hero-book-composition.webp" },
                   { label: d.summary.classAchievement, text: `${fullyGraded.length} / ${work.length} ${d.teacher.graded.toLowerCase()}` },
                   { label: d.summary.classStrong, text: strong?.name ?? d.teacher.noData },
                   { label: d.summary.classWeak, text: weak?.name ?? d.teacher.noData },
-                  { label: d.summary.nextStep, text: weak ? d.summary.nextText.replace("{name}", weak.name) : d.summary.nextNone },
+                  { label: d.summary.nextStep, text: weak ? d.summary.nextText.replace("{name}", weak.name) : d.summary.nextNone, image: "/images/interest-tech-robot.webp" },
                 ]}
               />
             )}

@@ -251,7 +251,7 @@ export const en: typeof kk = {
     noVideoSupport: "This browser cannot record video. Watch the animated summary and download the PDF version.",
     pdfFallback: "PDF version", captions: "Captions", voiceNote: "The video has no voice, only captions. You can add your own recorded audio if you like.",
     addAudio: "Add audio (optional)", audioAdded: "Audio added",
-    rulesNote: "The summary text is built by rules from real data. No paid video API is used.",
+    aiLoading: "AI is writing the captions from the real results…", aiScript: "Captions written by AI from the real results only.", aiNote: "The script and captions are written by AI from real results; the site builds the video from a ready template, pictures and animation. No paid video API is used.", rulesNote: "The summary text is built by rules from real data. No paid video API is used.",
     classAchievement: "Reached the objective", classDone: "Finished the work", classStrong: "Class strength", classWeak: "Needs support",
   },
   print: {

@@ -1,9 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, Film, Download, FileDown, Music } from "lucide-react";
+import { Play, Pause, Film, Download, FileDown, Music, Sparkles } from "lucide-react";
 import { useLang } from "@/lib/i18n/client";
+import { pick } from "@/lib/i18n";
 
 export type Slide = { label: string; text: string; image?: string };
+type Bi = { kk: string; en: string };
+type Script = { title: Bi; slides: { label: Bi; text: Bi }[] };
 
 const W = 1280;
 const H = 720;
@@ -26,6 +29,22 @@ function detectFormat(): { mime: string; ext: "mp4" | "webm"; label: "MP4" | "We
   return null;
 }
 
+/** Soft gold sparkles drifting in the background. */
+function drawSparkles(ctx: CanvasRenderingContext2D, t: number) {
+  ctx.save();
+  for (let i = 0; i < 14; i++) {
+    const x = (i * 97 + t * (12 + (i % 4) * 6)) % W;
+    const y = 120 + ((i * 53) % (H - 220)) + Math.sin(t * 1.3 + i) * 10;
+    const r = 2.5 + (i % 3) * 1.5;
+    ctx.globalAlpha = 0.25 + 0.2 * Math.sin(t * 2 + i);
+    ctx.fillStyle = i % 2 ? "#e0a92a" : "#9cca97";
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 function wrap(ctx: CanvasRenderingContext2D, text: string, maxW: number) {
   const words = text.split(/\s+/);
   const lines: string[] = [];
@@ -41,8 +60,45 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, maxW: number) {
   return lines;
 }
 
-export function SummaryVideo({ title, subtitle, slides, demo = false, pdfHref }: { title: string; subtitle: string; slides: Slide[]; demo?: boolean; pdfHref?: string }) {
-  const { d } = useLang();
+/**
+ * Animated summary built in the browser from a ready template, pictures and captions (no paid video API).
+ * `scriptUrl` returns AI-written captions based only on real results; until it answers, or if it fails,
+ * the rule-based captions in `slides` are shown.
+ */
+export function SummaryVideo({
+  title,
+  subtitle: baseSubtitle,
+  slides: baseSlides,
+  demo = false,
+  pdfHref,
+  scriptUrl,
+}: {
+  title: string;
+  subtitle: string;
+  slides: Slide[];
+  demo?: boolean;
+  pdfHref?: string;
+  scriptUrl?: string;
+}) {
+  const { d, lang } = useLang();
+  const [script, setScript] = useState<Script | null>(null);
+  const [scriptState, setScriptState] = useState<"idle" | "loading" | "done">(scriptUrl ? "loading" : "idle");
+  useEffect(() => {
+    if (!scriptUrl) return;
+    let alive = true;
+    fetch(scriptUrl)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => alive && j?.script && setScript(j.script as Script))
+      .catch(() => {})
+      .finally(() => alive && setScriptState("done"));
+    return () => {
+      alive = false;
+    };
+  }, [scriptUrl]);
+  const slides: Slide[] = script
+    ? script.slides.map((s, i) => ({ label: pick(s.label, lang), text: pick(s.text, lang), image: baseSlides[i]?.image ?? baseSlides[0]?.image }))
+    : baseSlides;
+  const subtitle = script ? pick(script.title, lang) : baseSubtitle;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const images = useRef<Record<string, HTMLImageElement>>({});
   const raf = useRef<number>(0);
@@ -68,7 +124,7 @@ export function SummaryVideo({ title, subtitle, slides, demo = false, pdfHref }:
     }
     draw(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slides, title]);
+  }, [script, lang, baseSlides, title]);
 
   function draw(t: number) {
     const ctx = canvasRef.current?.getContext("2d");
@@ -100,11 +156,13 @@ export function SummaryVideo({ title, subtitle, slides, demo = false, pdfHref }:
     const idx = t < INTRO ? -1 : Math.min(slides.length - 1, Math.floor((t - INTRO) / PER_SLIDE));
     const local = t < INTRO ? t : (t - INTRO) % PER_SLIDE;
     const fade = t === 0 ? 1 : Math.min(1, local / 0.6);
+    const slideIn = (1 - fade) * 40; // text glides in from the left
+    drawSparkles(ctx, t);
     ctx.globalAlpha = fade;
     if (idx < 0) {
       ctx.fillStyle = "#13261a";
       ctx.font = "800 64px 'Noto Serif', Georgia, serif";
-      wrap(ctx, title, W - 200).forEach((l, i) => ctx.fillText(l, 100, 300 + i * 78));
+      wrap(ctx, title, W - 200).forEach((l, i) => ctx.fillText(l, 100 - slideIn, 300 + i * 78));
       ctx.font = "500 32px 'Noto Sans', sans-serif";
       ctx.fillStyle = "#17652f";
       ctx.fillText(subtitle, 100, 300 + wrap(ctx, title, W - 200).length * 78 + 30);
@@ -114,10 +172,10 @@ export function SummaryVideo({ title, subtitle, slides, demo = false, pdfHref }:
       const textW = img?.complete ? 680 : W - 200;
       ctx.fillStyle = "#17652f";
       ctx.font = "700 30px 'Noto Sans', sans-serif";
-      ctx.fillText(`${idx + 1}/${slides.length} · ${s.label}`, 100, 220);
+      ctx.fillText(`${idx + 1}/${slides.length} · ${s.label}`, 100 - slideIn, 220);
       ctx.fillStyle = "#13261a";
       ctx.font = "700 46px 'Noto Serif', Georgia, serif";
-      wrap(ctx, s.text, textW).slice(0, 6).forEach((l, i) => ctx.fillText(l, 100, 300 + i * 62));
+      wrap(ctx, s.text, textW).slice(0, 6).forEach((l, i) => ctx.fillText(l, 100 - slideIn, 300 + i * 62));
       if (img?.complete && img.naturalWidth) {
         const box = 380;
         const r = Math.min(box / img.naturalWidth, box / img.naturalHeight);
@@ -201,6 +259,8 @@ export function SummaryVideo({ title, subtitle, slides, demo = false, pdfHref }:
       <div className="relative rounded-2xl overflow-hidden border border-leaf-100 bg-leaf-50">
         <canvas ref={canvasRef} width={W} height={H} className="w-full h-auto block" aria-label={title} />
       </div>
+      {scriptState === "loading" && <p className="text-xs text-muted flex items-center gap-1"><Sparkles className="w-3.5 h-3.5" /> {d.summary.aiLoading}</p>}
+      {script && <p className="text-xs text-leaf-700 flex items-center gap-1"><Sparkles className="w-3.5 h-3.5" /> {d.summary.aiScript}</p>}
       {/* Captions as text so the summary is readable without playing anything */}
       <details className="text-sm rounded-xl bg-white border border-leaf-100 p-3">
         <summary className="font-semibold cursor-pointer">{d.summary.captions}</summary>
@@ -240,7 +300,7 @@ export function SummaryVideo({ title, subtitle, slides, demo = false, pdfHref }:
       {video && (
         <video src={video.url} controls className="w-full rounded-2xl border border-leaf-100" />
       )}
-      <p className="text-xs text-muted">{d.summary.voiceNote} {d.summary.rulesNote}</p>
+      <p className="text-xs text-muted">{d.summary.voiceNote} {script ? d.summary.aiNote : d.summary.rulesNote}</p>
     </div>
   );
 }
