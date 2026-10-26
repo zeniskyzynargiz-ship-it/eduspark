@@ -2,7 +2,8 @@
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getStudent } from "@/lib/student-session";
-import { INTERESTS, DIFFICULTIES, SUPPORTS } from "@/lib/lesson";
+import { DIFFICULTIES, SUPPORTS } from "@/lib/lesson";
+import { parseSurveyConfig, surveyInterestKeys, readCustomAnswers } from "@/lib/survey";
 import { BASELINE_TASKS } from "@/lib/baseline";
 import { autoGrade } from "@/lib/grading";
 import { ownAssignment } from "@/lib/student-data";
@@ -19,9 +20,13 @@ const only = <T extends string>(vals: FormDataEntryValue[], allowed: readonly T[
 export async function submitSurveyAction(_: SState, fd: FormData): Promise<SState> {
   const st = await getStudent();
   if (!st) return { error: "auth" };
-  const interests = only(fd.getAll("interests"), INTERESTS);
-  if (!interests.length) return { error: "pickOne" };
   const db = supabaseAdmin();
+  const { data: cls } = await db.from("classes").select("survey_config").eq("id", st.classId).maybeSingle();
+  const cfg = parseSurveyConfig(cls?.survey_config);
+  const interests = only(fd.getAll("interests"), surveyInterestKeys(cfg));
+  if (!interests.length) return { error: "pickOne" };
+  const custom = readCustomAnswers(cfg, (n) => fd.getAll(n).map(String));
+  if (custom.missing) return { error: "required" };
   const { data: last } = await db.from("survey_responses").select("version").eq("student_id", st.id).order("version", { ascending: false }).limit(1).maybeSingle();
   const { error } = await db.from("survey_responses").insert({
     student_id: st.id,
@@ -34,6 +39,7 @@ export async function submitSurveyAction(_: SState, fd: FormData): Promise<SStat
     meaning_scale: scale(fd.get("meaning_scale")),
     support: only(fd.getAll("support"), SUPPORTS),
     support_other: String(fd.get("support_other") ?? "").slice(0, 200),
+    custom_answers: custom.answers,
   });
   // A double tap can race on the version number; the unique key rejects the duplicate.
   if (error && error.code !== "23505") return { error: "generic" };

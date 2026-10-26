@@ -5,6 +5,10 @@ import { PageTitle, Notice, Bar, Empty } from "@/components/Shared";
 import { SubmitButton } from "@/components/ui";
 import { addObservationAction, resetBaselineAction, deleteObservationAction } from "@/app/teacher/actions";
 import { BASELINE_TASKS } from "@/lib/baseline";
+import Link from "next/link";
+import { ListChecks } from "lucide-react";
+import { fmt } from "@/lib/i18n";
+import { interestLabel } from "@/lib/survey";
 
 export default async function AnalysisPage({ params }: { params: Promise<{ classId: string }> }) {
   const { classId } = await params;
@@ -22,7 +26,11 @@ export default async function AnalysisPage({ params }: { params: Promise<{ class
 
   return (
     <>
-      <PageTitle title={`${d.teacher.sections.analysis} · ${cls.name}`} sub={d.teacher.analysisIntro} />
+      <PageTitle
+        title={`${d.teacher.sections.analysis} · ${cls.name}`}
+        sub={d.teacher.analysisIntro}
+        actions={<Link href={`/teacher/c/${classId}/survey`} className="btn btn-outline btn-sm"><ListChecks className="w-4 h-4" /> {d.teacher.sections.survey}</Link>}
+      />
       <div className="space-y-2 mb-5">
         {p.missing.map((m) => <Notice key={m} tone="warn">{d.teacher.missing[m]}</Notice>)}
       </div>
@@ -48,7 +56,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ class
           <div className="grid md:grid-cols-3 gap-4 mt-4">
             <section className="card p-5 space-y-2">
               <h2 className="font-bold">{d.teacher.interestDist}</h2>
-              {p.surveyCount ? sortedCounts(p.interestCounts).map(([k, n]) => <Bar key={k} label={d.interests[k as keyof typeof d.interests] ?? k} value={n} max={max} />) : <p className="text-sm text-muted">{d.teacher.noData}</p>}
+              {p.surveyCount ? sortedCounts(p.interestCounts).map(([k, n]) => <Bar key={k} label={interestLabel(d, k)} value={n} max={max} />) : <p className="text-sm text-muted">{d.teacher.noData}</p>}
             </section>
             <section className="card p-5 space-y-2">
               <h2 className="font-bold">{d.teacher.difficultyDist}</h2>
@@ -66,6 +74,27 @@ export default async function AnalysisPage({ params }: { params: Promise<{ class
             </section>
           </div>
 
+          {p.custom.length > 0 && (
+            <section className="card p-5 mt-4">
+              <h2 className="font-bold">{d.teacher.sb.customResults}</h2>
+              <div className="grid md:grid-cols-2 gap-5 mt-3">
+                {p.custom.map((c) => (
+                  <div key={c.q.id} className="space-y-2">
+                    <div className="font-semibold">{c.q.text}</div>
+                    <div className="text-xs text-muted">{d.teacher.sb.types[c.q.type]} · {fmt(d.teacher.sb.answered, { n: c.answered })}</div>
+                    {(c.q.type === "single" || c.q.type === "multi") && Object.entries(c.counts).sort((a, b) => b[1] - a[1]).map(([o, n]) => <Bar key={o} label={o} value={n} max={Math.max(1, c.answered)} />)}
+                    {c.q.type === "scale" && <p className="text-sm">{fmt(d.teacher.sb.avg, { v: c.avg ?? "—" })}</p>}
+                    {c.q.type === "text" && (
+                      <ul className="text-sm list-disc pl-5 space-y-0.5 max-h-48 overflow-auto">
+                        {c.texts.map((x, i) => <li key={i}>{x}</li>)}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           <h2 className="text-xl font-bold mt-8 mb-3">{d.teacher.perStudent}</h2>
           <div className="space-y-3">
             {p.students.map((s) => {
@@ -78,7 +107,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ class
                 <details key={s.id} className="card p-4">
                   <summary className="cursor-pointer flex flex-wrap items-center gap-x-4 gap-y-1">
                     <span className="font-bold">{s.first_name} {s.last_name}</span>
-                    <span className="text-sm text-muted">{sv ? sv.interests.map((i) => d.interests[i as keyof typeof d.interests] ?? i).join(", ") : d.teacher.missing.no_survey}</span>
+                    <span className="text-sm text-muted">{sv ? sv.interests.map((i) => interestLabel(d, i)).join(", ") : d.teacher.missing.no_survey}</span>
                     <span className="text-sm ml-auto">{bl ? `${d.teacher.baselineDone}: ${bl.score}/${bl.max_score}` : "—"}</span>
                   </summary>
                   <div className="mt-3 grid md:grid-cols-2 gap-4 text-sm">
@@ -89,6 +118,9 @@ export default async function AnalysisPage({ params }: { params: Promise<{ class
                           <p><b>{d.teacher.supportDist}:</b> {sv.support.map((x) => d.supports[x as keyof typeof d.supports] ?? x).join(", ") || "—"} {sv.support_other}</p>
                           <p><b>{d.teacher.avgScales}:</b> {sv.interest_scale ?? "—"} / {sv.confidence_scale ?? "—"} / {sv.meaning_scale ?? "—"}</p>
                           {sv.other_interest && <p><b>{d.interests.other}:</b> {sv.other_interest}</p>}
+                          {Object.entries(sv.custom_answers ?? {}).map(([qid, x]) => (
+                            <p key={qid}><b>{x.q}:</b> {Array.isArray(x.a) ? x.a.join(", ") : String(x.a)}</p>
+                          ))}
                         </>
                       ) : (
                         <p className="text-muted">{d.teacher.missing.no_survey}</p>
@@ -97,7 +129,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ class
                         <div className="pt-2">
                           <b>{d.teacher.surveyHistory}:</b>
                           <ul className="list-disc pl-5">
-                            {hist.map((h) => <li key={h.id}>v{h.version} · {d.teacher.answeredAt}: {date(h.created_at)} · {h.interests.map((i: string) => d.interests[i as keyof typeof d.interests] ?? i).join(", ")}</li>)}
+                            {hist.map((h) => <li key={h.id}>v{h.version} · {d.teacher.answeredAt}: {date(h.created_at)} · {h.interests.map((i: string) => interestLabel(d, i)).join(", ")}</li>)}
                           </ul>
                         </div>
                       )}

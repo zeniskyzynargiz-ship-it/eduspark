@@ -4,6 +4,7 @@ import { loadClassProfile, variantInterests } from "@/lib/profile";
 import { aiStatus } from "@/lib/ai/provider";
 import { PageTitle, Notice } from "@/components/Shared";
 import { CreateLessonForm } from "./CreateLessonForm";
+import { interestLabel } from "@/lib/survey";
 
 export default async function CreateLessonPage({ params }: { params: Promise<{ classId: string }> }) {
   const { classId } = await params;
@@ -18,7 +19,7 @@ export default async function CreateLessonPage({ params }: { params: Promise<{ c
         {!ai.configured && <Notice tone="warn">{d.teacher.aiNotConfigured}</Notice>}
         {ai.configured && <Notice>{d.teacher.aiCost}</Notice>}
         {profile.missing.map((m) => <Notice key={m} tone="warn">{d.teacher.missing[m]}</Notice>)}
-        <p className="text-sm text-muted">{d.teacher.variants}: {variantInterests(profile).map((i) => d.interests[i as keyof typeof d.interests]).join(", ")}</p>
+        <p className="text-sm text-muted">{d.teacher.variants}: {variantInterests(profile).map((i) => interestLabel(d, i)).join(", ")}</p>
       </div>
       <CreateLessonForm classId={classId} />
     </>

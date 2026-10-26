@@ -2,6 +2,7 @@ import type { Dict, Lang } from "./i18n";
 import { fmt, pick } from "./i18n";
 import type { Criterion } from "./lesson";
 import type { Slide, ChartRow, TableRow } from "@/components/SummaryVideo";
+import { interestLabel } from "@/lib/survey";
 
 type CritScore = Record<string, { got: number; gradedMax: number; graded: number }>;
 
@@ -55,7 +56,7 @@ export function studentSlides(
   const pct = graded ? tasks.reduce((s, t) => s + (t.got ?? 0), 0) / Math.max(1, tasks.filter((t) => t.got !== null).reduce((s, t) => s + t.max, 0)) : null;
   const motivation = pct === null ? d.summary.motivation.start : pct >= 0.85 ? d.summary.motivation.high : pct >= 0.5 ? d.summary.motivation.mid : d.summary.motivation.low;
   return [
-    { icon: "🎯", label: d.summary.chosen, text: d.interests[input.interest as keyof Dict["interests"]] ?? input.interest, image: input.image },
+    { icon: "🎯", label: d.summary.chosen, text: interestLabel(d, input.interest), image: input.image },
     { icon: "✅", label: d.summary.work, text: fmt(d.summary.workText, { done: input.done, total: input.total }), chart: [{ label: d.summary.work, value: input.total ? Math.round((input.done / input.total) * 100) : 0 }] },
     { icon: "📋", label: d.summary.tasksTitle, text: graded ? d.summary.tasksText : d.summary.tasksWait, table },
     { icon: "⭐", label: d.summary.success, text: strong ? fmt(d.summary.successText, { name: strong.name }) : d.summary.successNone, chart: critChart(input.byCrit, input.criteria, lang) },

@@ -15,6 +15,7 @@ import { LessonEditor } from "@/components/teacher/LessonEditor";
 import { RegenPanel } from "@/components/teacher/RegenPanel";
 import { PublishButton } from "@/components/teacher/PublishButton";
 import { setLessonStatusAction, stageControlAction, setModeAction, restoreVersionAction, deleteLessonAction, duplicateLessonAction } from "@/app/teacher/actions";
+import { interestLabel } from "@/lib/survey";
 
 const IMG: Record<string, string> = {
   sport: "/images/interest-sport-ball.webp",
@@ -163,7 +164,7 @@ export default async function LessonPage({ params, searchParams }: { params: Pro
               {(assignments as unknown as { id: string; variant_key: string; status: string; mode: string; students: { first_name: string; last_name: string } }[]).map((a) => (
                 <tr key={a.id}>
                   <td>{a.students?.first_name} {a.students?.last_name}</td>
-                  <td>{d.interests[a.variant_key as keyof typeof d.interests] ?? a.variant_key}</td>
+                  <td>{interestLabel(d, a.variant_key)}</td>
                   <td>{statusLabel[a.status]}</td>
                   <td>
                     <form action={setModeAction} className="flex gap-1">
@@ -212,7 +213,7 @@ export default async function LessonPage({ params, searchParams }: { params: Pro
                 <div key={v.interest}>
                   <div className="flex items-center gap-3 mb-2">
                     {IMG[v.interest] && <Image src={IMG[v.interest]} alt="" width={48} height={40} className="object-contain" />}
-                    <h3 className="font-bold">{d.interests[v.interest]} <span className="font-normal text-sm text-muted">— {pick(v.context, lang)}</span></h3>
+                    <h3 className="font-bold">{interestLabel(d, v.interest)} <span className="font-normal text-sm text-muted">— {pick(v.context, lang)}</span></h3>
                     <span className="ml-auto text-sm text-muted">{fmt(d.teacher.totalPoints, { n: totalPoints(variantTasks(c, v)) })}</span>
                   </div>
                   <div className="grid gap-2">{v.tasks.map((t, i) => <TaskPreview key={t.id} task={t} index={i + 1} d={d} lang={lang} showKey />)}</div>

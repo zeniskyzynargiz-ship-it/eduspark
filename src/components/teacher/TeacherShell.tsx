@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Menu, Home, Users, ClipboardList, Sparkles, BookOpenCheck, CheckSquare, BarChart3, Workflow, FileDown, Settings, LogOut, Info,
+  Menu, Home, Users, ClipboardList, Sparkles, BookOpenCheck, CheckSquare, BarChart3, Workflow, FileDown, Settings, LogOut, Info, ListChecks,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { LangSwitch } from "@/components/LangSwitch";
@@ -24,6 +24,7 @@ export function TeacherShell({ name, classes, children }: { name: string; classe
   const items = [
     { href: "/teacher", label: d.nav.home, Icon: Home, exact: true },
     { href: cls("students"), label: s.students, Icon: Users },
+    { href: cls("survey"), label: s.survey, Icon: ListChecks },
     { href: cls("analysis"), label: s.analysis, Icon: ClipboardList },
     { href: cls("create"), label: s.create, Icon: Sparkles },
     { href: cls("lessons"), label: s.lessons, Icon: BookOpenCheck },

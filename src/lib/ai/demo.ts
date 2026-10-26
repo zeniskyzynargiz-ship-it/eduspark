@@ -78,11 +78,13 @@ const CTX: Record<Interest, Ctx> = {
 
 const T = (kk: string, en: string) => ({ kk, en });
 
-function variant(interest: Interest): Variant {
-  const c = CTX[interest];
+function variant(interest: string): Variant {
+  const custom = !(interest in CTX);
+  const c = CTX[(custom ? "other" : interest) as Interest];
+  const label = interest.replace(/^\+/, "");
   return {
     interest,
-    context: T(c.kk, c.en),
+    context: custom ? T(`${label}: мәтіндерді осы тақырыпқа өзгертіңіз`, `${label}: adapt the texts to this topic`) : T(c.kk, c.en),
     tasks: [
       { id: "t1", type: "choice", criterion_id: "c1", points: 2, prompt: `${c.text}\n\n${c.q}`, instruction: T("Мәтінді оқып, дұрыс жауапты таңда.", "Read the text and choose the correct answer."), options: c.options, correct: [0], hint: T("Мәтіннің соңғы сөйлемін қайта оқы.", "Read the last sentence again.") },
       { id: "t2", type: "match", criterion_id: "c2", points: 2, prompt: "", instruction: T("Сөзді мағынасымен сәйкестендір.", "Match each word with its meaning."), pairs: c.match.map(([left, right]) => ({ left, right })) },
@@ -109,8 +111,8 @@ function splitMinutes(total: number, weights: number[]) {
 }
 
 export function demoLesson(input: LessonInput, profile: ClassProfile, interests: string[]): LessonContent {
-  const valid = interests.filter((i): i is Interest => i in CTX);
-  const list: Interest[] = valid.length ? valid : ["sport", "music", "travel", "technology"];
+  const valid = interests.filter((i) => i in CTX || i.startsWith("+"));
+  const list: string[] = valid.length ? valid : ["sport", "music", "travel", "technology"];
   const m = splitMinutes(input.duration, [1, 1.5, 3.5, 2, 1, 1]);
   const missingKk: string[] = [];
   const missingEn: string[] = [];

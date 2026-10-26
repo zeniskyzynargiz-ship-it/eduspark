@@ -16,7 +16,7 @@ Return ONE JSON object, no prose, exactly in this shape (Bi = {"kk": "...Kazakh.
   "addie_rationale": {"analyze": Bi, "design": Bi, "develop": Bi, "implement": Bi, "evaluate": Bi},
   "stages": [{"title": Bi, "minutes": int, "teacher_activity": Bi, "student_activity": Bi, "resources": "string", "evidence": Bi}],
   "criteria": [{"id": "c1", "name": Bi, "descriptors": [{"text": Bi, "points": int}]}],
-  "variants": [{"interest": "sport|music|travel|technology|games|animals|art|other", "context": Bi, "tasks": [Task, ...]}],
+  "variants": [{"interest": "one key from the listed interests, copied exactly (a key that starts with + is a teacher-added interest)", "context": Bi, "tasks": [Task, ...]}],
   "common_tasks": [Task, ...],
   "support": {"vocabulary": [{"en": "word", "kk": "сөз"}], "sentence_frames": ["I think ... because ..."], "explanation": Bi},
   "reflection_questions": [Bi, ...],
@@ -125,7 +125,7 @@ Task (each also has "id", "instruction": Bi, "prompt": "English text", "points":
 export function variantUserPrompt(input: LessonInput, plan: Record<string, unknown>, slots: unknown[], interest: string) {
   return JSON.stringify({
     lesson: { topic: input.topic, learning_objective: input.objective, grade_level: input.gradeLevel, source_material: input.sourceMaterial.slice(0, 3000) },
-    interest,
+    interest: interest.replace(/^\+/, ""),
     criteria: plan.criteria,
     support: plan.support,
     task_plan: slots,

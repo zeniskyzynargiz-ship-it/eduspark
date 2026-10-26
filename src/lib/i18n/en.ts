@@ -123,10 +123,22 @@ export const en: typeof kk = {
   },
   teacher: {
     sections: {
-      classes: "My classes", students: "Students", analysis: "Survey and starting analysis", create: "Create a lesson",
+      classes: "My classes", students: "Students", analysis: "Survey and starting analysis", survey: "Survey builder", create: "Create a lesson",
       lessons: "Lessons and tasks", grading: "Assessment", results: "Results", addie: "ADDIE", exports: "Export materials", settings: "Settings",
     },
     hello: "Hello, {name}!",
+    sb: {
+      intro: "Build the survey your students fill in. Once saved, students see the new survey the next time they open it.",
+      interestsTitle: "Interest options", interestsHint: "Task variants are built from these choices. Turn off the ones you do not need and add your own.",
+      addInterest: "Add option", interestPh: "For example: Films, Football, Cooking",
+      blocksTitle: "Ready-made questions", blockDifficulties: "What is hard in English?", blockScales: "Interest, confidence, meaning (1–5)", blockSupport: "What help do you need?",
+      questionsTitle: "My own questions", noQuestions: "No questions of your own yet.", addQuestion: "Add question",
+      qText: "Question text", qTextPh: "For example: Why do you learn English?", qType: "Answer type",
+      types: { single: "Choose one", multi: "Choose several", scale: "Scale 1–5", text: "Open answer" },
+      options: "Answer options", optionPh: "Option", addOption: "Add option", required: "Required question", remove: "Remove", up: "Up", down: "Down",
+      save: "Save survey", saved: "Saved. Students will see the new survey.", invalid: "Check: question text cannot be empty and choice questions need at least 2 options.",
+      preview: "Interests students will see", customResults: "Results of my own questions", answered: "{n} answers", avg: "Average: {v}",
+    },
     dash: {
       title: "What is happening in your classes today?", lead: "Every number comes from your own classes: students, surveys, lessons and submitted work.",
       create: "Create a lesson", students: "Students", results: "Results", grading: "Grading", open: "Open",
@@ -227,7 +239,7 @@ export const en: typeof kk = {
     scaleLow: "a little", scaleHigh: "a lot",
     q6: "What helps you?", q6other: "Other help",
     surveySubmit: "Send", surveyThanks: "Thank you! Your answers are saved. You can change your interests later.",
-    pickOne: "Choose at least one interest.",
+    pickOne: "Choose at least one interest.", answerRequired: "Answer the required questions.",
     baselineTitle: "Starting tasks", baselineIntro: "Do your best. Mistakes are normal: this helps your teacher see which tasks suit you.",
     baselineDone: "Thank you! Your starting tasks have been sent.", baselineAlready: "You have completed the starting tasks.",
     goal: "Goal", criteria: "Assessment criteria", myTasks: "My tasks", task: "Task {n}",

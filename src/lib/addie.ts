@@ -1,6 +1,7 @@
 import type { ClassProfile } from "./profile";
 import type { LessonContent } from "./lesson";
 import { dicts } from "./i18n";
+import { interestLabel } from "@/lib/survey";
 
 export const ADDIE_KEYS = ["analyze", "design", "develop", "implement", "evaluate"] as const;
 export type AddieRecord = Record<(typeof ADDIE_KEYS)[number], { kk: string; en: string }>;
@@ -47,7 +48,7 @@ export function buildAddie(p: ClassProfile, input: { objective: string; duration
     out.develop = {
       ...out.develop,
       [lang]: [
-        `${d.teacher.variants}: ${c.variants.map((v) => d.interests[v.interest]).join(", ")}`,
+        `${d.teacher.variants}: ${c.variants.map((v) => interestLabel(d, v.interest)).join(", ")}`,
         `${d.teacher.vocabulary}: ${c.support.vocabulary.map((v) => v.en).join(", ") || "—"}`,
         `${d.teacher.frames}: ${c.support.sentence_frames.join(" | ") || "—"}`,
         c.addie_rationale.develop[lang],

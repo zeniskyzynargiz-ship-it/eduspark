@@ -7,6 +7,7 @@ import { TaskPreview } from "@/components/TaskPreview";
 import { AutoPrint, PrintButton } from "@/components/AutoPrint";
 import { SummaryVideo } from "@/components/SummaryVideo";
 import { LessonPlanTable, CriteriaTable } from "@/components/LessonTables";
+import { interestLabel } from "@/lib/survey";
 
 const IMG: Record<string, string> = {
   sport: "/images/interest-sport-ball.webp",
@@ -46,7 +47,7 @@ export default async function SampleLessonPage({ searchParams }: { searchParams:
             <div key={v.interest} className="avoid-break">
               <div className="flex items-center gap-3 mb-2">
                 {IMG[v.interest] && <Image src={IMG[v.interest]} alt="" width={56} height={48} className="object-contain" />}
-                <h3 className="text-lg font-bold">{d.interests[v.interest]} <span className="text-sm font-normal text-muted">— {pick(v.context, lang)}</span></h3>
+                <h3 className="text-lg font-bold">{interestLabel(d, v.interest)} <span className="text-sm font-normal text-muted">— {pick(v.context, lang)}</span></h3>
               </div>
               <div className="grid gap-2">{v.tasks.map((t, i) => <TaskPreview key={t.id} task={t} index={i + 1} d={d} lang={lang} showKey />)}</div>
             </div>

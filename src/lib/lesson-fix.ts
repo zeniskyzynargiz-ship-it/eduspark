@@ -1,4 +1,4 @@
-import { INTERESTS, LessonContentSchema, TaskSchema, validateLesson, variantTasks, type LessonContent, type Task } from "./lesson";
+import { isInterestKey, LessonContentSchema, TaskSchema, validateLesson, variantTasks, type LessonContent, type Task } from "./lesson";
 
 /**
  * Deterministic clean-up of an AI lesson, so small slips (minutes that do not add up,
@@ -79,8 +79,9 @@ export function normalizeRaw(raw: unknown): unknown {
     const seen = new Set<string>();
     x.variants = (x.variants as J[])
       .map((v) => {
-        let interest = String(v?.interest ?? "other").toLowerCase().trim();
-        if (!(INTERESTS as readonly string[]).includes(interest)) interest = "other";
+        const rawKey = String(v?.interest ?? "other").trim();
+        let interest = rawKey.startsWith("+") ? rawKey : rawKey.toLowerCase();
+        if (!isInterestKey(interest)) interest = "other";
         const tasks = Array.isArray(v?.tasks) ? (v.tasks as unknown[]).map(cleanTask).filter(Boolean).slice(0, 8) : [];
         return { ...v, interest, tasks };
       })

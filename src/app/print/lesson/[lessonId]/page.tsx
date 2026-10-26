@@ -9,6 +9,7 @@ import { PrintShell, PrintHeader } from "@/components/PrintShell";
 import { TaskPreview } from "@/components/TaskPreview";
 import { LessonPlanTable, CriteriaTable } from "@/components/LessonTables";
 import type { Dict, Lang } from "@/lib/i18n";
+import { interestLabel } from "@/lib/survey";
 
 type T = "plan" | "key" | "grading" | "class" | "student" | "variant" | "summary";
 
@@ -83,7 +84,7 @@ export default async function PrintLesson({ params, searchParams }: { params: Pr
         <PrintHeader title={`${d.print.teacherVersion}: ${lesson.topic}`} sub={sub} d={d} />
         {c.variants.map((v) => (
           <section key={v.interest} className="mb-5">
-            <h2 className="font-bold text-lg mb-2">{d.interests[v.interest]} · {fmt(d.teacher.totalPoints, { n: totalPoints(variantTasks(c, v)) })}</h2>
+            <h2 className="font-bold text-lg mb-2">{interestLabel(d, v.interest)} · {fmt(d.teacher.totalPoints, { n: totalPoints(variantTasks(c, v)) })}</h2>
             <div className="space-y-2">{variantTasks(c, v).map((t, i) => <TaskPreview key={t.id} task={t} index={i + 1} d={d} lang={lang} showKey />)}</div>
           </section>
         ))}

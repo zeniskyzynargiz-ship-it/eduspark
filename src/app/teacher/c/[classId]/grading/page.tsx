@@ -12,6 +12,7 @@ import { GradeRow } from "@/components/teacher/GradeRow";
 import { releaseFeedbackAction, returnWorkAction, releaseStudentFeedbackAction } from "@/app/teacher/actions";
 import { finalScore } from "@/lib/grading";
 import type { Task } from "@/lib/lesson";
+import { interestLabel } from "@/lib/survey";
 
 function answerText(t: Task, a: unknown, none: string) {
   if (a === null || a === undefined) return none;
@@ -78,7 +79,7 @@ export default async function GradingPage({ params, searchParams }: { params: Pr
                 <details key={a.id} className="card p-4" open={work.length <= 3}>
                   <summary className="cursor-pointer flex flex-wrap items-center gap-x-4 gap-y-1">
                     <span className="font-bold">{a.students?.first_name} {a.students?.last_name}</span>
-                    <span className="text-sm text-muted">{d.interests[a.variant_key as keyof typeof d.interests]} · {a.mode === "paper" ? d.teacher.paper : d.teacher.phone} · {statusLabel[a.status]}</span>
+                    <span className="text-sm text-muted">{interestLabel(d, a.variant_key)} · {a.mode === "paper" ? d.teacher.paper : d.teacher.phone} · {statusLabel[a.status]}</span>
                     {(lesson.feedback_released || a.feedback_released) && <span className="chip !bg-leaf-100 !text-leaf-800"><CheckCircle2 className="w-3.5 h-3.5" /> {d.teacher.sentToStudent}</span>}
                     <span className="ml-auto font-semibold">{d.teacher.total}: {sc.got} / {sc.max} {sc.complete ? "" : `(${sc.graded}/${sc.total})`}</span>
                   </summary>

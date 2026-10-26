@@ -4,6 +4,7 @@ import { getDict } from "@/lib/i18n/server";
 import { PageTitle, Empty, Notice } from "@/components/Shared";
 import { LessonPicker } from "@/components/teacher/LessonPicker";
 import type { LessonContent } from "@/lib/lesson";
+import { interestLabel } from "@/lib/survey";
 
 export default async function ExportsPage({ params, searchParams }: { params: Promise<{ classId: string }>; searchParams: Promise<{ lesson?: string }> }) {
   const { classId } = await params;
@@ -40,7 +41,7 @@ export default async function ExportsPage({ params, searchParams }: { params: Pr
               <Item href={`${base}?type=class`} icon={<Users className="w-5 h-5" />} label={d.teacher.exportClass} />
             ) : (
               (lesson.content as LessonContent | null)?.variants.map((v) => (
-                <Item key={v.interest} href={`${base}?type=variant&interest=${v.interest}`} icon={<User className="w-5 h-5" />} label={`${d.print.studentVersion}: ${d.interests[v.interest]}`} />
+                <Item key={v.interest} href={`${base}?type=variant&interest=${encodeURIComponent(v.interest)}`} icon={<User className="w-5 h-5" />} label={`${d.print.studentVersion}: ${interestLabel(d, v.interest)}`} />
               ))
             )}
           </div>

@@ -7,7 +7,8 @@ import { fmt } from "@/lib/i18n";
 import { Empty } from "@/components/Shared";
 import { NewClassForm } from "@/components/teacher/NewClassForm";
 import { scoreAssignment, type RespRow } from "@/lib/results";
-import { INTERESTS, type Task, type Criterion } from "@/lib/lesson";
+import type { Task, Criterion } from "@/lib/lesson";
+import { interestLabel } from "@/lib/survey";
 
 const IMG: Partial<Record<string, string>> = {
   sport: "/images/interest-sport-ball.webp",
@@ -55,7 +56,7 @@ export default async function TeacherHome() {
   }
   const interestCount: Record<string, number> = {};
   for (const s of latest.values()) for (const i of new Set(s.interests)) interestCount[i] = (interestCount[i] ?? 0) + 1;
-  const interestRows = INTERESTS.map((k) => ({ k, n: interestCount[k] ?? 0 })).filter((r) => r.n > 0).sort((a, b) => b.n - a.n);
+  const interestRows = Object.entries(interestCount).map(([k, n]) => ({ k, n })).filter((r) => r.n > 0).sort((a, b) => b.n - a.n);
   const maxInterest = Math.max(1, ...interestRows.map((r) => r.n));
 
   // Scores of submitted works (graded tasks only).
@@ -155,11 +156,11 @@ export default async function TeacherHome() {
               {interestRows.map(({ k, n }) => (
                 <div key={k} className="flex items-center gap-3">
                   <span className="relative w-12 h-10 shrink-0 grid place-items-center text-2xl">
-                    {IMG[k] ? <Image src={IMG[k]!} alt="" fill sizes="48px" className="object-contain" /> : EMOJI[k]}
+                    {IMG[k] ? <Image src={IMG[k]!} alt="" fill sizes="48px" className="object-contain" /> : EMOJI[k] ?? "⭐"}
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between text-sm font-semibold">
-                      <span>{d.interests[k]}</span>
+                      <span>{interestLabel(d, k)}</span>
                       <span className="text-muted">{fmt(t.studentsN, { n })}</span>
                     </div>
                     <div className="mt-1 h-2.5 rounded-full bg-leaf-100 overflow-hidden">

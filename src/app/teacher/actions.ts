@@ -7,6 +7,7 @@ import { LessonContentSchema, validateLesson, type LessonContent, type Task } fr
 import { pickVariant, type SurveyRow } from "@/lib/profile";
 import { buildAssignmentContent } from "@/lib/assignment";
 import { fixLesson } from "@/lib/lesson-fix";
+import { SurveyConfigSchema } from "@/lib/survey";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 const id = (v: unknown) => {
@@ -341,5 +342,17 @@ export async function updateProfileAction(_: ActionResult, fd: FormData): Promis
   if (full_name.length < 3) return { error: "nameShort" };
   await sb.from("teachers").update({ full_name }).eq("id", user.id);
   revalidatePath("/teacher", "layout");
+  return { ok: true };
+}
+
+// ---------- Survey builder ----------
+export async function saveSurveyConfigAction(classId: string, raw: unknown): Promise<ActionResult> {
+  const { sb } = await requireTeacher();
+  const cid = id(classId);
+  const parsed = SurveyConfigSchema.safeParse(raw);
+  if (!parsed.success) return { error: "invalid" };
+  const { error } = await sb.from("classes").update({ survey_config: parsed.data }).eq("id", cid);
+  if (error) return { error: "generic" };
+  revalidatePath(`/teacher/c/${cid}`, "layout");
   return { ok: true };
 }

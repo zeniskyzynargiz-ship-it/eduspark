@@ -4,6 +4,9 @@ export const INTERESTS = ["sport", "music", "travel", "technology", "games", "an
 export const DIFFICULTIES = ["vocabulary", "grammar", "reading", "speaking_fear", "task_meaning"] as const;
 export const SUPPORTS = ["examples", "word_list", "sentence_frames", "pair_help", "teacher_help", "pictures", "more_time"] as const;
 export type Interest = (typeof INTERESTS)[number];
+/** A teacher's own interest option is stored as "+" and its label, e.g. "+Кино". */
+export const CUSTOM_INTEREST = /^\+[^\s+][^\n]{0,39}$/;
+export const isInterestKey = (k: string) => (INTERESTS as readonly string[]).includes(k) || CUSTOM_INTEREST.test(k);
 
 export const Bi = z.object({ kk: z.string().min(1), en: z.string().min(1) });
 export type Bi = z.infer<typeof Bi>;
@@ -62,7 +65,7 @@ export const StageSchema = z.object({
 export type Stage = z.infer<typeof StageSchema>;
 
 export const VariantSchema = z.object({
-  interest: z.enum(INTERESTS),
+  interest: z.string().refine(isInterestKey, "Unknown interest"),
   context: Bi,
   tasks: z.array(TaskSchema).min(1).max(8),
 });

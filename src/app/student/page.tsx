@@ -5,6 +5,7 @@ import { fmt } from "@/lib/i18n";
 import { requireStudent, latestSurvey, studentLessons, ensureAssignment } from "@/lib/student-data";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { StudentShell } from "@/components/student/StudentShell";
+import { interestLabel } from "@/lib/survey";
 
 export default async function StudentHome() {
   const st = await requireStudent();
@@ -29,7 +30,7 @@ export default async function StudentHome() {
           <div className="mt-2">
             <div className="text-xl font-bold" lang="en">{today.topic}</div>
             <p className="text-sm mt-1"><b>{d.student.goal}:</b> {today.objective}</p>
-            <p className="text-xs text-muted mt-1">{d.interests[todayAssignment.variant_key as keyof typeof d.interests]} · {statusLabel[todayAssignment.status]}</p>
+            <p className="text-xs text-muted mt-1">{interestLabel(d, todayAssignment.variant_key)} · {statusLabel[todayAssignment.status]}</p>
             <Link href={`/student/lesson/${today.id}`} className="btn btn-primary w-full mt-4">{todayAssignment.status === "assigned" ? d.student.start : d.common.open} <ArrowRight className="w-4 h-4" /></Link>
           </div>
         ) : (

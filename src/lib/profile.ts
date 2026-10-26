@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { INTERESTS, DIFFICULTIES } from "./lesson";
+import { parseSurveyConfig, summarizeCustom, type SurveyConfig, type CustomAnswers } from "./survey";
 
 export type StudentRow = { id: string; first_name: string; last_name: string; active: boolean };
 export type SurveyRow = {
@@ -14,6 +15,7 @@ export type SurveyRow = {
   meaning_scale: number | null;
   support: string[];
   support_other: string;
+  custom_answers?: CustomAnswers | null;
   created_at: string;
 };
 export type BaselineRow = { student_id: string; score: number; max_score: number; results: Record<string, unknown>; answers: Record<string, unknown>; created_at: string };
@@ -31,6 +33,8 @@ export type ClassProfile = {
   /** Latest survey per student. */
   latest: Map<string, SurveyRow>;
   baseline: Map<string, BaselineRow>;
+  survey: SurveyConfig;
+  custom: ReturnType<typeof summarizeCustom>;
   /** Anonymous data that may be sent to an AI provider. No names. */
   forAI: Record<string, unknown>;
 };
@@ -43,18 +47,19 @@ const avg = (xs: (number | null)[]) => {
 export async function loadClassProfile(sb: SupabaseClient, classId: string): Promise<ClassProfile & { students: StudentRow[] }> {
   const { data: students } = await sb.from("students").select("id, first_name, last_name, active").eq("class_id", classId).eq("active", true).order("first_name");
   const ids = (students ?? []).map((s) => s.id);
-  const [{ data: surveys }, { data: baselines }] = await Promise.all([
+  const [{ data: surveys }, { data: baselines }, { data: cls }] = await Promise.all([
     ids.length ? sb.from("survey_responses").select("*").in("student_id", ids).order("version", { ascending: false }) : Promise.resolve({ data: [] as SurveyRow[] }),
     ids.length ? sb.from("baseline_attempts").select("student_id, score, max_score, results, answers, created_at").in("student_id", ids) : Promise.resolve({ data: [] as BaselineRow[] }),
+    sb.from("classes").select("survey_config").eq("id", classId).maybeSingle(),
   ]);
   const latest = new Map<string, SurveyRow>();
   for (const s of (surveys ?? []) as SurveyRow[]) if (!latest.has(s.student_id)) latest.set(s.student_id, s);
   const baseline = new Map<string, BaselineRow>();
   for (const b of (baselines ?? []) as BaselineRow[]) baseline.set(b.student_id, b);
-  return { ...buildProfile(students ?? [], latest, baseline), students: students ?? [] };
+  return { ...buildProfile(students ?? [], latest, baseline, parseSurveyConfig(cls?.survey_config)), students: students ?? [] };
 }
 
-export function buildProfile(students: StudentRow[], latest: Map<string, SurveyRow>, baseline: Map<string, BaselineRow>): ClassProfile {
+export function buildProfile(students: StudentRow[], latest: Map<string, SurveyRow>, baseline: Map<string, BaselineRow>, survey: SurveyConfig = parseSurveyConfig({})): ClassProfile {
   const interestCounts: Record<string, number> = Object.fromEntries(INTERESTS.map((k) => [k, 0]));
   const difficultyCounts: Record<string, number> = Object.fromEntries(DIFFICULTIES.map((k) => [k, 0]));
   const supportCounts: Record<string, number> = {};
@@ -76,6 +81,7 @@ export function buildProfile(students: StudentRow[], latest: Map<string, SurveyR
     else if (baseline.size < students.length) missing.push("partial_baseline");
   }
 
+  const custom = summarizeCustom(survey, [...latest.values()].map((s) => s.custom_answers ?? {}));
   const avgScales = { interest: avg(surveys.map((s) => s.interest_scale)), confidence: avg(surveys.map((s) => s.confidence_scale)), meaning: avg(surveys.map((s) => s.meaning_scale)) };
   const forAI = {
     students_total: students.length,
@@ -87,6 +93,7 @@ export function buildProfile(students: StudentRow[], latest: Map<string, SurveyR
     average_self_report_1_to_5: { interest: avgScales.interest, confidence: avgScales.confidence, personal_meaning: avgScales.meaning },
     baseline_average_percent: baselineAvgPct,
     missing_data: missing,
+    teacher_questions: custom.filter((c) => c.q.type !== "text").map((c) => ({ question: c.q.text, answered: c.answered, option_counts: c.q.type === "scale" ? undefined : c.counts, average_1_to_5: c.q.type === "scale" ? c.avg : undefined })),
     anonymous_students: students.map((st, i) => {
       const s = latest.get(st.id);
       const b = baseline.get(st.id);
@@ -113,6 +120,8 @@ export function buildProfile(students: StudentRow[], latest: Map<string, SurveyR
     missing,
     latest,
     baseline,
+    survey,
+    custom,
     forAI,
   };
 }

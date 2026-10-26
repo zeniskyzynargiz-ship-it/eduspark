@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { useLang } from "@/lib/i18n/client";
 import { Notice } from "@/components/Shared";
+import { interestLabel } from "@/lib/survey";
 
 const PARTS = ["variants", "stages", "criteria", "common_tasks", "support", "reflection_questions", "homework"] as const;
 
@@ -60,7 +61,7 @@ export function RegenPanel({ lessonId, interests }: { lessonId: string; interest
         </select>
         {part === "variants" && (
           <select className="input text-sm" value={interest} onChange={(e) => setInterest(e.target.value)} aria-label={d.teacher.variants}>
-            {interests.map((i) => <option key={i} value={i}>{d.interests[i as keyof typeof d.interests] ?? i}</option>)}
+            {interests.map((i) => <option key={i} value={i}>{interestLabel(d, i)}</option>)}
           </select>
         )}
       </div>
