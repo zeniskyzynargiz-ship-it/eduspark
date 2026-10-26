@@ -53,7 +53,7 @@ export const en: typeof kk = {
     sampleDemoNote: "This is a demonstration sample, not a real class result.",
     criterion: "Criterion", descriptor: "Descriptor", score: "Points",
     videoTitle: "Summary video",
-    videoNote: "The cover picture is a demonstration sample, not evidence of a lesson that took place.",
+    videoNote: "The site builds the video from the student's real results: chosen interest, tasks, mistakes and next step.",
     pdf: "Download PDF", fullView: "Full view",
   },
   addie: {
@@ -127,6 +127,14 @@ export const en: typeof kk = {
       lessons: "Lessons and tasks", grading: "Assessment", results: "Results", addie: "ADDIE", exports: "Export materials", settings: "Settings",
     },
     hello: "Hello, {name}!",
+    dash: {
+      title: "What is happening in your classes today?", lead: "Every number comes from your own classes: students, surveys, lessons and submitted work.",
+      create: "Create a lesson", students: "Students", results: "Results", grading: "Grading", open: "Open",
+      statClasses: "Classes", statStudents: "Students", statSurvey: "Completed the survey", statLessons: "Published lessons", statWorks: "Submitted works", statAvg: "Average result", statGraded: "{n} graded",
+      interestsTitle: "Student interests", interestsLead: "From the latest survey. A student can choose several interests.", noSurvey: "No surveys yet. They appear here once students join with the class code and fill in the survey.", studentsN: "{n} students",
+      lessonsTitle: "Latest lessons", noLessons: "No lessons yet. Open a class and create your first lesson.", submitted: "Submitted: {n}/{total}", avg: "Average: {p}%", noAvg: "Not graded yet",
+      classesTitle: "My classes",
+    },
     chooseClass: "Choose a class", noClasses: "No classes yet. Create your first class.",
     editClass: "Rename class", duplicateLesson: "Copy and edit", deleteLesson: "Delete lesson", deleteLessonConfirm: "The lesson and all student work in it will be deleted. Are you sure?", returnWork: "Return to student (to change answers)", returnWorkConfirm: "The work goes back to the student: they can change their answers and submit again. Continue?", deleteConfirm: "Are you sure you want to delete this?", pupilVideoHint: "Click a student's name to open their own summary video.", createManual: "Create by hand (no AI)", createManualHint: "\"Create by hand\" opens a ready template: you write, add or delete the tasks yourself. No AI call, no cost.", templateNotice: "This time the AI could not finish the lesson, so a ready template was opened. Use \"Edit content\" below to change the texts for your topic, or try generating again later.", manualNotice: "This is a blank template. Press \"Edit content\" and write the texts and tasks for your topic. Use \"+ Add\" and \"Delete\" to add or remove tasks.", addItem: "Add", releaseFeedbackAll: "Send grades to all students", sentToStudent: "Sent to student", sendToStudent: "Send grades to this student", unsendStudent: "Take back", sendHint: "First save each task score with Save, then send. The student sees the scores, comments and the results in their video.", correctAnswer: "Correct answer", sampleAnswer: "Sample answer", notGraded: "Not graded", newClass: "New class", className: "Class name", classNamePh: "For example: 7B", grade: "Grade / level", gradePh: "For example: Grade 7, A2",
     createClass: "Create class", studentsCount: "{n} students", openClass: "Open",
@@ -243,7 +251,7 @@ export const en: typeof kk = {
     title: "About the site",
     lead: "EduSpark is a bilingual (Kazakh/English) platform for English teachers. It links each student's interests with the learning objective and brings the whole path, from lesson design to assessment and summary, into one place.",
     videoTitle: "A short video about the site",
-    videoNote: "The lesson and results in the video are a demo sample, not real class data.",
+    videoNote: "The video shows the main features of the platform with an example lesson.",
     summaryTitle: "Overall summary",
     sections: [
       { icon: "🎯", title: "Goal", text: "Connect students' interests (sport, music, travel, technology and more) with the objective of an English lesson, so tasks feel meaningful and engaging." },

@@ -340,7 +340,6 @@ export function SummaryVideo({
   title,
   subtitle: baseSubtitle,
   slides: baseSlides,
-  demo = false,
   pdfHref,
   scriptUrl,
   allowPhoto = false,
@@ -435,17 +434,6 @@ export function SummaryVideo({
     const eduW = ctx.measureText("Edu").width;
     ctx.fillStyle = "#c98a12";
     ctx.fillText("Spark", 60 + eduW, 80);
-    if (demo) {
-      ctx.font = "600 22px 'Noto Sans', sans-serif";
-      const label = d.common.demoSample;
-      const lw = ctx.measureText(label).width + 32;
-      ctx.fillStyle = "#fff4d6";
-      ctx.beginPath();
-      ctx.roundRect(W - lw - 50, 160, lw, 44, 22);
-      ctx.fill();
-      ctx.fillStyle = "#7a4b00";
-      ctx.fillText(label, W - lw - 34, 190);
-    }
     const photoReady = !!(photo && photoImg.current?.complete);
     const slidesEnd = INTRO + slides.length * PER_SLIDE;
     if (t < INTRO) {

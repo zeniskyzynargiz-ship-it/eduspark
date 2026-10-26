@@ -23,7 +23,6 @@ export function SampleLesson() {
             <span className="w-11 h-11 rounded-full bg-leaf-100 grid place-items-center"><BookOpen className="w-5 h-5 text-leaf-700" /></span>
             <h2 className="text-2xl sm:text-3xl font-bold">{d.home.sampleTitle}</h2>
             <span className="chip"><Clock className="w-4 h-4" /> 45 {d.common.minutes}</span>
-            <span className="chip !bg-amber-100 !text-amber-900">{d.common.demo}</span>
           </div>
           <div className="mt-4 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" role="tablist">
             {(Object.keys(d.home.sampleTabs) as Tab[]).map((k) => (
@@ -76,17 +75,14 @@ export function SampleLesson() {
                 <p><b>{d.summary.chosen}:</b> {d.interests.sport}</p>
                 <p><b>{d.summary.work}:</b> {d.summary.workText.replace("{done}", "6").replace("{total}", "6")}</p>
                 <p><b>{d.summary.nextStep}:</b> {d.summary.nextNone}</p>
-                <p className="text-muted">{d.home.sampleDemoNote}</p>
               </div>
             )}
           </div>
-          <p className="text-xs text-muted mt-2">{d.home.sampleDemoNote}</p>
         </div>
         <div className="flex flex-col gap-3">
           <Link href="/sample-lesson#video" className="block rounded-2xl border border-leaf-100 p-2 bg-white group">
             <div className="relative aspect-video rounded-xl overflow-hidden">
               <Image src="/images/demo-teacher-cover.webp" alt="" fill sizes="320px" className="object-cover" />
-              <span className="absolute right-2 top-2 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-leaf-800 border border-leaf-200">{d.common.demoSample}</span>
               <span className="absolute inset-0 grid place-items-center">
                 <span className="w-14 h-14 rounded-full bg-white/95 grid place-items-center shadow-lg group-hover:scale-105 transition"><Play className="w-6 h-6 text-ink fill-ink ml-1" /></span>
               </span>

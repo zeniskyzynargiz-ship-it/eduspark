@@ -26,7 +26,6 @@ export default async function SampleLessonPage({ searchParams }: { searchParams:
         <h1 className="text-3xl sm:text-4xl font-bold">{d.sample.pageTitle}</h1>
         <PrintButton label={d.print.printBtn} />
       </div>
-      <p className="mt-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2 text-sm">{d.home.sampleDemoNote}</p>
       <dl className="card p-5 mt-4 grid sm:grid-cols-3 gap-3 text-sm">
         <div><dt className="text-muted">{d.sample.topic}</dt><dd className="font-semibold" lang="en">{d.sample.demoTopic}</dd></div>
         <div className="sm:col-span-2"><dt className="text-muted">{d.sample.objective}</dt><dd className="font-semibold">{d.sample.demoObjective}</dd></div>
@@ -66,14 +65,13 @@ export default async function SampleLessonPage({ searchParams }: { searchParams:
         <h2 className="text-xl font-bold mb-3">{d.home.videoTitle}</h2>
         <div className="relative w-full max-w-sm aspect-video rounded-xl overflow-hidden mb-3">
           <Image src="/images/demo-teacher-cover.webp" alt="" fill sizes="384px" className="object-cover" />
-          <span className="absolute right-2 top-2 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-leaf-800">{d.common.demoSample}</span>
         </div>
         <p className="text-xs text-muted mb-3">{d.home.videoNote}</p>
         <SummaryVideo
           demo
           allowPhoto
           title={d.summary.title}
-          subtitle={`${d.common.demoSample} · ${d.sample.demoTopic}`}
+          subtitle={d.sample.demoTopic}
           slides={[
             { icon: "🎯", label: d.summary.chosen, text: d.interests.sport, image: IMG.sport },
             { icon: "✅", label: d.summary.work, text: d.summary.workText.replace("{done}", "6").replace("{total}", "6"), chart: [{ label: d.summary.work, value: 100 }] },
