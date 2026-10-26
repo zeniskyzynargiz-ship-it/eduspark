@@ -37,6 +37,11 @@ export function RegisterForm() {
           {match ? d.auth.match : d.auth.mismatch}
         </p>
       )}
+      <div>
+        <label className="label" htmlFor="invite_code">{d.auth.inviteCode}</label>
+        <input id="invite_code" name="invite_code" required autoComplete="off" autoCapitalize="characters" spellCheck={false} className="input" />
+        <p className="text-xs text-muted mt-1">{d.auth.inviteHint}</p>
+      </div>
       <button className="btn btn-primary w-full" disabled={pending || !match || !strongEnough(p1)}>
         {pending ? d.common.loading : d.auth.registerBtn}
       </button>

@@ -3,6 +3,7 @@ import { resolveMx } from "dns/promises";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
 import { getLang } from "@/lib/i18n/server";
 import { strongEnough } from "@/lib/password";
@@ -31,26 +32,35 @@ async function domainAcceptsMail(email: string) {
   }
 }
 
+/** Friendly early check. The database trigger enforces the code again on sign-up. */
+async function inviteValid(code: string) {
+  const { data } = await supabaseAdmin().from("invite_codes").select("active, max_uses, uses").eq("code", code).maybeSingle();
+  return !!data && data.active && (data.max_uses == null || data.uses < data.max_uses);
+}
+
 export async function registerAction(_: AuthState, fd: FormData): Promise<AuthState> {
   const fullName = String(fd.get("full_name") ?? "").trim().replace(/\s+/g, " ");
   const email = String(fd.get("email") ?? "").trim().toLowerCase();
   const password = String(fd.get("password") ?? "");
   const password2 = String(fd.get("password2") ?? "");
+  const invite = String(fd.get("invite_code") ?? "").trim().toUpperCase();
   if (fullName.length < 3 || !fullName.includes(" ")) return { error: "nameShort" };
   if (!EMAIL_RE.test(email)) return { error: "emailInvalid" };
   if (!strongEnough(password)) return { error: "weak" };
   if (password !== password2) return { error: "mismatch" };
   if (!(await domainAcceptsMail(email))) return { error: "emailInvalid" };
+  if (!invite || !(await inviteValid(invite))) return { error: "badInvite" };
 
   const sb = await supabaseServer();
   const lang = await getLang();
   const { data, error } = await sb.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName, lang }, emailRedirectTo: `${await origin()}/auth/callback?next=/teacher` },
+    options: { data: { full_name: fullName, lang, invite_code: invite }, emailRedirectTo: `${await origin()}/auth/callback?next=/teacher` },
   });
   if (error) {
     if (/already/i.test(error.message)) return { error: "exists" };
+    if (/invite|database error/i.test(error.message)) return { error: "badInvite" };
     if (/rate/i.test(error.message)) return { error: "tooMany" };
     if (/not authorized|sending|smtp|email/i.test(error.message)) return { error: "smtpError" };
     return { error: "generic" };

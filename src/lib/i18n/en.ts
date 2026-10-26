@@ -97,7 +97,7 @@ export const en: typeof kk = {
     loginTitle: "Teacher log in", fullName: "Full name", fullNamePh: "For example: Aigul Serikkyzy",
     email: "Email", password: "Password", password2: "Repeat password",
     show: "Show", hide: "Hide", passwordHint: "At least 8 characters, with letters and numbers.",
-    mismatch: "Passwords do not match.", match: "Passwords match.", weak: "The password must be at least 8 characters and contain letters and numbers.", nameShort: "Please write your full name.",
+    mismatch: "Passwords do not match.", inviteCode: "Sign-up code", inviteHint: "Ask the site administrator for the code.", badInvite: "The sign-up code is wrong.", match: "Passwords match.", weak: "The password must be at least 8 characters and contain letters and numbers.", nameShort: "Please write your full name.",
     emailInvalid: "The email address is not valid.",
     registerBtn: "Sign up", loginBtn: "Log in", haveAccount: "Already have an account?", noAccount: "No account yet?",
     forgot: "Forgot your password?", forgotTitle: "Reset password", forgotSub: "Enter your email and we will send a reset link.",
