@@ -104,6 +104,39 @@ export async function studentFacts(st: StudentCtx, lessonId: string) {
   return { lesson, assignment: a, content, sc, facts };
 }
 
+/**
+ * Teacher view of one student's summary. `sb` is the teacher's RLS client, so only their own students load.
+ * The teacher sees grades even before they are released to the student.
+ */
+export async function pupilFacts(sb: SupabaseClient, assignmentId: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(assignmentId)) return null;
+  const { data: a } = await sb
+    .from("assignments")
+    .select("id, lesson_id, student_id, variant_key, content, students(first_name, last_name), lessons(id, topic, objective, status, class_id, feedback_released)")
+    .eq("id", assignmentId)
+    .maybeSingle();
+  const lesson = a?.lessons as unknown as { id: string; topic: string; objective: string; status: string; class_id: string; feedback_released: boolean } | null;
+  if (!a || !lesson || !["published", "completed"].includes(lesson.status)) return null;
+  const { data: rs } = await sb.from("responses").select("*").eq("assignment_id", a.id);
+  const content = a.content as unknown as { tasks: Task[]; criteria: Criterion[]; interest: string };
+  const sc = scoreAssignment({ content, responses: (rs ?? []) as RespRow[] });
+  const c = critFacts(sc.byCrit, content.criteria);
+  const facts: SummaryFacts = {
+    scope: "student",
+    topic: lesson.topic,
+    objective: lesson.objective,
+    interest: a.variant_key,
+    tasks_done: sc.answered,
+    tasks_total: sc.total,
+    scores_released: true,
+    criteria: c.list,
+    strongest: c.strongest,
+    weakest: c.weakest,
+  };
+  const student = a.students as unknown as { first_name: string; last_name: string } | null;
+  return { lesson, assignment: a, student, content, sc, facts };
+}
+
 export function classFactsFrom(lesson: { topic: string; objective: string; content: unknown }, work: AssignmentFull[]): SummaryFacts {
   const criteria = (lesson.content as LessonContent | undefined)?.criteria ?? [];
   const scores = work.map((a) => scoreAssignment(a));

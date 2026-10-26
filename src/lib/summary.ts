@@ -1,7 +1,7 @@
 import type { Dict, Lang } from "./i18n";
 import { fmt, pick } from "./i18n";
 import type { Criterion } from "./lesson";
-import type { Slide } from "@/components/SummaryVideo";
+import type { Slide, ChartRow } from "@/components/SummaryVideo";
 
 type CritScore = Record<string, { got: number; gradedMax: number; graded: number }>;
 
@@ -17,15 +17,23 @@ export function strongWeak(byCrit: CritScore, criteria: Criterion[], lang: Lang)
   return { strong, weak };
 }
 
+/** Percent per criterion for the animated chart; null = not graded yet. */
+export function critChart(byCrit: CritScore, criteria: Criterion[], lang: Lang): ChartRow[] {
+  return criteria.map((c) => {
+    const v = byCrit[c.id];
+    return { label: pick(c.name, lang), value: v && v.graded > 0 && v.gradedMax > 0 ? Math.round((v.got / v.gradedMax) * 100) : null };
+  });
+}
+
 /** Rule-based student summary slides built from real data only. */
 export function studentSlides(d: Dict, lang: Lang, input: { interest: string; done: number; total: number; byCrit: CritScore; criteria: Criterion[]; image?: string }): Slide[] {
   const { strong, weak } = strongWeak(input.byCrit, input.criteria, lang);
   return [
-    { label: d.summary.chosen, text: d.interests[input.interest as keyof Dict["interests"]] ?? input.interest, image: input.image },
-    { label: d.summary.work, text: fmt(d.summary.workText, { done: input.done, total: input.total }) },
-    { label: d.summary.success, text: strong ? fmt(d.summary.successText, { name: strong.name }) : d.summary.successNone },
-    { label: d.summary.struggle, text: weak ? fmt(d.summary.struggleText, { name: weak.name }) : d.summary.struggleNone },
-    { label: d.summary.nextStep, text: weak ? fmt(d.summary.nextText, { name: weak.name }) : d.summary.nextNone },
+    { icon: "🎯", label: d.summary.chosen, text: d.interests[input.interest as keyof Dict["interests"]] ?? input.interest, image: input.image },
+    { icon: "✅", label: d.summary.work, text: fmt(d.summary.workText, { done: input.done, total: input.total }), chart: [{ label: d.summary.work, value: input.total ? Math.round((input.done / input.total) * 100) : 0 }] },
+    { icon: "⭐", label: d.summary.success, text: strong ? fmt(d.summary.successText, { name: strong.name }) : d.summary.successNone, chart: critChart(input.byCrit, input.criteria, lang) },
+    { icon: "💪", label: d.summary.struggle, text: weak ? fmt(d.summary.struggleText, { name: weak.name }) : d.summary.struggleNone, image: input.image },
+    { icon: "🚀", label: d.summary.nextStep, text: weak ? fmt(d.summary.nextText, { name: weak.name }) : d.summary.nextNone, image: "/images/hero-book-composition.webp" },
   ];
 }
 

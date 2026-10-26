@@ -1,17 +1,22 @@
 "use client";
 import { useActionState, useState } from "react";
-import { Pencil, Save } from "lucide-react";
+import { Pencil, Save, Trash2 } from "lucide-react";
 import { saveLessonContentAction } from "@/app/teacher/actions";
 import { useLang } from "@/lib/i18n/client";
 import { Notice } from "@/components/Shared";
 import type { LessonContent } from "@/lib/lesson";
 
 type J = unknown;
+// Labels for the nested editor, set from the current language when the editor renders.
+let labels = { del: "Delete", confirm: "Delete this item?" };
+const DELETE_LABEL = () => labels.del;
+const DELETE_CONFIRM = () => labels.confirm;
 const LOCKED = new Set(["type", "id", "criterion_id", "interest"]);
 
 /** Simple form editor over the lesson content. Structure (ids, types) stays fixed; texts, points and minutes can change. */
 export function LessonEditor({ lessonId, content }: { lessonId: string; content: LessonContent }) {
   const { d } = useLang();
+  labels = { del: d.common.delete, confirm: d.teacher.deleteConfirm };
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<J>(content);
   const [state, action, pending] = useActionState(saveLessonContentAction, null);
@@ -68,7 +73,20 @@ function Field({ value, onChange, path, name }: { value: J; onChange: (v: J) => 
       <div className="space-y-2">
         {value.map((item, i) => (
           <div key={i} className={typeof item === "object" ? "rounded-xl border border-leaf-100 p-3" : ""}>
-            {typeof item === "object" && <div className="text-xs font-bold text-muted mb-1">#{i + 1}</div>}
+            {typeof item === "object" && (
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold text-muted">#{i + 1}</span>
+                {value.length > 1 && (
+                  <button
+                    type="button"
+                    className="text-xs text-danger inline-flex items-center gap-1 hover:underline"
+                    onClick={() => confirm(DELETE_CONFIRM()) && onChange(value.filter((_, j) => j !== i))}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> {DELETE_LABEL()}
+                  </button>
+                )}
+              </div>
+            )}
             <Field value={item} path={`${path}.${i}`} onChange={(v) => onChange(value.map((x, j) => (j === i ? v : x)))} />
           </div>
         ))}

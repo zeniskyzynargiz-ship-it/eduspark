@@ -1,8 +1,10 @@
+import Link from "next/link";
+import { Clapperboard } from "lucide-react";
 import { requireClass } from "@/lib/teacher";
 import { getDict } from "@/lib/i18n/server";
 import { pick } from "@/lib/i18n";
 import { loadLessonWork, scoreAssignment } from "@/lib/results";
-import { strongWeak } from "@/lib/summary";
+import { strongWeak, critChart } from "@/lib/summary";
 import { PageTitle, Empty, Notice, Bar } from "@/components/Shared";
 import { LessonPicker } from "@/components/teacher/LessonPicker";
 import { SummaryVideo } from "@/components/SummaryVideo";
@@ -54,13 +56,18 @@ export default async function ResultsPage({ params, searchParams }: { params: Pr
                 return <Bar key={c.id} label={`${pick(c.name, lang)} ${pct === null ? `(${d.teacher.noData})` : `${pct}%`}`} value={pct ?? 0} max={100} />;
               })}
             </div>
-            <div className="mt-4 overflow-x-auto">
+            <p className="mt-4 text-sm text-muted">{d.teacher.pupilVideoHint}</p>
+            <div className="mt-2 overflow-x-auto">
               <table className="table min-w-[480px]">
                 <thead><tr><th>{d.teacher.firstName}</th>{criteria.map((c) => <th key={c.id}>{pick(c.name, lang)}</th>)}<th>{d.teacher.total}</th></tr></thead>
                 <tbody>
                   {scores.map(({ a, s }) => (
                     <tr key={a.id}>
-                      <td>{a.students?.first_name} {a.students?.last_name?.slice(0, 1)}.</td>
+                      <td>
+                        <Link href={`/teacher/c/${classId}/results/${a.id}`} className="underline decoration-leaf-300 hover:text-leaf-700 inline-flex items-center gap-1" title={d.summary.title}>
+                          <Clapperboard className="w-4 h-4 text-leaf-600" /> {a.students?.first_name} {a.students?.last_name?.slice(0, 1)}.
+                        </Link>
+                      </td>
                       {criteria.map((c) => <td key={c.id}>{s.byCrit[c.id]?.graded ? `${s.byCrit[c.id].got}/${s.byCrit[c.id].max}` : "—"}</td>)}
                       <td className="font-semibold">{s.graded ? `${s.got}/${s.max}` : "—"}{!s.complete && s.graded ? "*" : ""}</td>
                     </tr>
@@ -93,11 +100,11 @@ export default async function ResultsPage({ params, searchParams }: { params: Pr
                 pdfHref={`/print/lesson/${lesson.id}?type=summary`}
                 scriptUrl={`/api/summary/script?scope=class&lesson=${lesson.id}`}
                 slides={[
-                  { label: d.summary.classDone, text: `${submitted} / ${work.length}`, image: "/images/hero-book-composition.webp" },
-                  { label: d.summary.classAchievement, text: `${fullyGraded.length} / ${work.length} ${d.teacher.graded.toLowerCase()}` },
-                  { label: d.summary.classStrong, text: strong?.name ?? d.teacher.noData },
-                  { label: d.summary.classWeak, text: weak?.name ?? d.teacher.noData },
-                  { label: d.summary.nextStep, text: weak ? d.summary.nextText.replace("{name}", weak.name) : d.summary.nextNone, image: "/images/interest-tech-robot.webp" },
+                  { icon: "✅", label: d.summary.classDone, text: `${submitted} / ${work.length}`, chart: [{ label: d.teacher.submitted, value: work.length ? Math.round((submitted / work.length) * 100) : 0 }, { label: d.teacher.graded, value: work.length ? Math.round((fullyGraded.length / work.length) * 100) : 0 }] },
+                  { icon: "🎯", label: d.summary.classAchievement, text: `${fullyGraded.length} / ${work.length} ${d.teacher.graded.toLowerCase()}`, chart: critChart(crit, criteria, lang) },
+                  { icon: "⭐", label: d.summary.classStrong, text: strong?.name ?? d.teacher.noData, image: "/images/hero-book-composition.webp" },
+                  { icon: "💪", label: d.summary.classWeak, text: weak?.name ?? d.teacher.noData, image: "/images/interest-travel-globe.webp" },
+                  { label: d.summary.nextStep, text: weak ? d.summary.nextText.replace("{name}", weak.name) : d.summary.nextNone, image: "/images/interest-tech-robot.webp", icon: "🚀" },
                 ]}
               />
             )}

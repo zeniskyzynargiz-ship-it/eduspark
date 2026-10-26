@@ -16,7 +16,7 @@ export default async function StudentSummaryPage({ params, searchParams }: { par
   if (!r) notFound();
   const { lesson, assignment: a, content, sc } = r;
   const enough = sc.answered > 0;
-  const slides = studentSlides(d, lang, { interest: a.variant_key, done: sc.answered, total: sc.total, byCrit: sc.byCrit, criteria: content.criteria, image: INTEREST_IMG[a.variant_key] }).map((sl, i, all) => (i === all.length - 1 ? { ...sl, image: "/images/hero-book-composition.webp" } : sl.image ? sl : { ...sl, image: INTEREST_IMG[a.variant_key] }));
+  const slides = studentSlides(d, lang, { interest: a.variant_key, done: sc.answered, total: sc.total, byCrit: sc.byCrit, criteria: content.criteria, image: INTEREST_IMG[a.variant_key] });
 
   return (
     <StudentShell st={st} d={d}>
@@ -34,7 +34,7 @@ export default async function StudentSummaryPage({ params, searchParams }: { par
         </ol>
       ) : (
         <div className="mt-4">
-          <SummaryVideo title={`${st.firstName}: ${d.summary.title}`} subtitle={lesson.topic} slides={slides} pdfHref={`/student/summary/${lessonId}?print=1`} scriptUrl={`/api/summary/script?scope=student&lesson=${lessonId}`} />
+          <SummaryVideo title={`${st.firstName}: ${d.summary.title}`} subtitle={lesson.topic} slides={slides} pdfHref={`/student/summary/${lessonId}?print=1`} scriptUrl={`/api/summary/script?scope=student&lesson=${lessonId}`} allowPhoto fileName={`eduspark-${st.firstName}`} />
         </div>
       )}
     </StudentShell>

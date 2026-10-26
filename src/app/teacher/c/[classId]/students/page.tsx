@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, RefreshCw, Trash2, Printer } from "lucide-react";
+import { CheckCircle2, Circle, RefreshCw, Trash2, Printer, Pencil } from "lucide-react";
 import { requireClass } from "@/lib/teacher";
 import { getDict } from "@/lib/i18n/server";
 import { env } from "@/lib/env";
@@ -6,7 +6,7 @@ import { PageTitle, Empty } from "@/components/Shared";
 import { JoinPanel } from "@/components/teacher/JoinPanel";
 import { AddStudents } from "@/components/teacher/AddStudents";
 import { SubmitButton } from "@/components/ui";
-import { resetCodeAction, removeStudentAction, deleteClassAction } from "@/app/teacher/actions";
+import { resetCodeAction, removeStudentAction, deleteClassAction, updateStudentAction, updateClassAction } from "@/app/teacher/actions";
 
 export default async function StudentsPage({ params }: { params: Promise<{ classId: string }> }) {
   const { classId } = await params;
@@ -55,7 +55,19 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
                 {students.map((s, i) => (
                   <tr key={s.id}>
                     <td>{i + 1}</td>
-                    <td className="font-medium">{s.first_name} {s.last_name}</td>
+                    <td className="font-medium">
+                      <details>
+                        <summary className="cursor-pointer list-none inline-flex items-center gap-1.5">
+                          {s.first_name} {s.last_name} <Pencil className="w-3.5 h-3.5 text-muted" aria-label={d.common.edit} />
+                        </summary>
+                        <form action={updateStudentAction} className="flex flex-wrap gap-2 mt-2">
+                          <input type="hidden" name="student_id" value={s.id} />
+                          <input name="first_name" defaultValue={s.first_name} required maxLength={40} className="input !min-h-9 !py-1 text-sm w-32" aria-label={d.teacher.firstName} />
+                          <input name="last_name" defaultValue={s.last_name} maxLength={60} className="input !min-h-9 !py-1 text-sm w-36" aria-label={d.teacher.lastName} />
+                          <SubmitButton className="btn btn-primary btn-sm">{d.common.save}</SubmitButton>
+                        </form>
+                      </details>
+                    </td>
                     <td className="font-mono font-bold tracking-wider">{s.personal_code}</td>
                     <td>{hasSurvey.has(s.id) ? <CheckCircle2 className="w-5 h-5 text-leaf-600" aria-label={d.common.yes} /> : <Circle className="w-5 h-5 text-gray-300" aria-label={d.common.no} />}</td>
                     <td>{hasBaseline.has(s.id) ? <CheckCircle2 className="w-5 h-5 text-leaf-600" aria-label={d.common.yes} /> : <Circle className="w-5 h-5 text-gray-300" aria-label={d.common.no} />}</td>
@@ -77,6 +89,15 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
             </table>
           </div>
         )}
+        <details className="card p-4">
+          <summary className="cursor-pointer font-semibold inline-flex items-center gap-2"><Pencil className="w-4 h-4" /> {d.teacher.editClass}</summary>
+          <form action={updateClassAction} className="grid sm:grid-cols-[1fr_1fr_auto] gap-2 mt-3">
+            <input type="hidden" name="class_id" value={classId} />
+            <input name="name" defaultValue={cls.name} required maxLength={60} className="input" aria-label={d.teacher.className} />
+            <input name="grade" defaultValue={cls.grade_level} maxLength={60} className="input" aria-label={d.teacher.grade} />
+            <SubmitButton className="btn btn-primary">{d.common.save}</SubmitButton>
+          </form>
+        </details>
         <form action={deleteClassAction} className="pt-4">
           <input type="hidden" name="class_id" value={classId} />
           <SubmitButton className="btn btn-danger btn-sm" confirmText={d.teacher.deleteClassConfirm}><Trash2 className="w-4 h-4" /> {d.teacher.deleteClass}</SubmitButton>

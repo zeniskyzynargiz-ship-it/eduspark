@@ -3,7 +3,7 @@ import { getDict } from "@/lib/i18n/server";
 import { loadClassProfile, type SurveyRow } from "@/lib/profile";
 import { PageTitle, Notice, Bar, Empty } from "@/components/Shared";
 import { SubmitButton } from "@/components/ui";
-import { addObservationAction, resetBaselineAction } from "@/app/teacher/actions";
+import { addObservationAction, resetBaselineAction, deleteObservationAction } from "@/app/teacher/actions";
 import { BASELINE_TASKS } from "@/lib/baseline";
 
 export default async function AnalysisPage({ params }: { params: Promise<{ classId: string }> }) {
@@ -122,7 +122,17 @@ export default async function AnalysisPage({ params }: { params: Promise<{ class
                       )}
                       <div>
                         <b>{d.teacher.observation}</b>
-                        <ul className="list-disc pl-5">{obs.map((o) => <li key={o.id}>{date(o.created_at)}: {o.note}</li>)}</ul>
+                        <ul className="list-disc pl-5">
+                          {obs.map((o) => (
+                            <li key={o.id} className="group">
+                              {date(o.created_at)}: {o.note}{" "}
+                              <form action={deleteObservationAction} className="inline">
+                                <input type="hidden" name="observation_id" value={o.id} />
+                                <SubmitButton className="text-xs text-danger underline ml-1" confirmText={d.teacher.deleteConfirm}>{d.common.delete}</SubmitButton>
+                              </form>
+                            </li>
+                          ))}
+                        </ul>
                         <form action={addObservationAction} className="flex gap-2 mt-1">
                           <input type="hidden" name="student_id" value={s.id} />
                           <input name="note" required maxLength={1000} className="input !min-h-10 !py-1.5 text-sm" placeholder={d.teacher.observationPh} aria-label={d.teacher.addObservation} />

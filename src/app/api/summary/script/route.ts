@@ -1,7 +1,7 @@
 import { getTeacher } from "@/lib/supabase/server";
 import { getStudent } from "@/lib/student-session";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { classFacts, factsHash, studentFacts, type SummaryFacts } from "@/lib/summary-facts";
+import { classFacts, factsHash, pupilFacts, studentFacts, type SummaryFacts } from "@/lib/summary-facts";
 import { generateSummaryScript } from "@/lib/ai/summary";
 import { AIError, aiConfig } from "@/lib/ai/provider";
 import { json, fail } from "@/lib/api";
@@ -20,6 +20,7 @@ export async function GET(req: Request) {
   const lessonId = url.searchParams.get("lesson") ?? "";
   const scope = url.searchParams.get("scope");
   let facts: SummaryFacts | null = null;
+  let cacheLessonId = lessonId;
   let studentId: string | null = null;
 
   if (scope === "student") {
@@ -30,6 +31,16 @@ export async function GET(req: Request) {
     if (r.sc.answered === 0) return json({ script: null, reason: "no_data" });
     facts = r.facts;
     studentId = st.id;
+  } else if (scope === "pupil") {
+    // A teacher looking at one student's summary.
+    const { sb, user } = await getTeacher();
+    if (!user) return fail("auth", 401);
+    const r = await pupilFacts(sb, url.searchParams.get("assignment") ?? "");
+    if (!r) return fail("not_found", 404);
+    if (r.sc.answered === 0) return json({ script: null, reason: "no_data" });
+    facts = r.facts;
+    studentId = r.assignment.student_id;
+    cacheLessonId = r.lesson.id;
   } else if (scope === "class") {
     const { sb, user } = await getTeacher();
     if (!user) return fail("auth", 401);
@@ -44,7 +55,7 @@ export async function GET(req: Request) {
   const db = supabaseAdmin();
   const hash = factsHash(facts);
   const base = () => {
-    const q = db.from("summary_scripts").select("script, facts_hash").eq("lesson_id", lessonId);
+    const q = db.from("summary_scripts").select("script, facts_hash").eq("lesson_id", cacheLessonId);
     return studentId ? q.eq("student_id", studentId) : q.is("student_id", null);
   };
   const { data: rows } = await base().order("created_at", { ascending: false });
@@ -56,7 +67,7 @@ export async function GET(req: Request) {
   try {
     const script = await generateSummaryScript(facts);
     const cfg = aiConfig();
-    await db.from("summary_scripts").insert({ lesson_id: lessonId, student_id: studentId, facts_hash: hash, script, provider: cfg?.label, model: cfg?.model });
+    await db.from("summary_scripts").insert({ lesson_id: cacheLessonId, student_id: studentId, facts_hash: hash, script, provider: cfg?.label, model: cfg?.model });
     return json({ script });
   } catch (e) {
     return json({ script: null, reason: e instanceof AIError ? e.code : "provider_error" });

@@ -71,14 +71,15 @@ export default async function SampleLessonPage({ searchParams }: { searchParams:
         <p className="text-xs text-muted mb-3">{d.home.videoNote}</p>
         <SummaryVideo
           demo
+          allowPhoto
           title={d.summary.title}
           subtitle={`${d.common.demoSample} · ${d.sample.demoTopic}`}
           slides={[
-            { label: d.summary.chosen, text: d.interests.sport, image: IMG.sport },
-            { label: d.summary.work, text: d.summary.workText.replace("{done}", "6").replace("{total}", "6") },
-            { label: d.summary.success, text: d.summary.successText.replace("{name}", pick(lesson.criteria[0].name, lang)) },
-            { label: d.summary.struggle, text: d.summary.struggleText.replace("{name}", pick(lesson.criteria[1].name, lang)) },
-            { label: d.summary.nextStep, text: d.summary.nextText.replace("{name}", pick(lesson.criteria[1].name, lang)) },
+            { icon: "🎯", label: d.summary.chosen, text: d.interests.sport, image: IMG.sport },
+            { icon: "✅", label: d.summary.work, text: d.summary.workText.replace("{done}", "6").replace("{total}", "6"), chart: [{ label: d.summary.work, value: 100 }] },
+            { icon: "⭐", label: d.summary.success, text: d.summary.successText.replace("{name}", pick(lesson.criteria[0].name, lang)), chart: lesson.criteria.map((c, i) => ({ label: pick(c.name, lang), value: [90, 60, 75, 80][i % 4] })) },
+            { icon: "💪", label: d.summary.struggle, text: d.summary.struggleText.replace("{name}", pick(lesson.criteria[1].name, lang)), image: IMG.sport },
+            { icon: "🚀", label: d.summary.nextStep, text: d.summary.nextText.replace("{name}", pick(lesson.criteria[1].name, lang)), image: "/images/hero-book-composition.webp" },
           ]}
         />
       </section>

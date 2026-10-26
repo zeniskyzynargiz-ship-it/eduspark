@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Headphones, AlertTriangle } from "lucide-react";
+import { Eye, EyeOff, Headphones, AlertTriangle, Undo2 } from "lucide-react";
 import { requireClass } from "@/lib/teacher";
 import { getDict } from "@/lib/i18n/server";
 import { pick } from "@/lib/i18n";
@@ -9,7 +9,7 @@ import { PageTitle, Empty, Notice } from "@/components/Shared";
 import { SubmitButton } from "@/components/ui";
 import { LessonPicker } from "@/components/teacher/LessonPicker";
 import { GradeRow } from "@/components/teacher/GradeRow";
-import { releaseFeedbackAction } from "@/app/teacher/actions";
+import { releaseFeedbackAction, returnWorkAction } from "@/app/teacher/actions";
 import type { Task } from "@/lib/lesson";
 
 function answerText(t: Task, a: unknown, none: string) {
@@ -72,6 +72,12 @@ export default async function GradingPage({ params, searchParams }: { params: Pr
                     <span className="ml-auto font-semibold">{d.teacher.total}: {sc.got} / {sc.max} {sc.complete ? "" : `(${sc.graded}/${sc.total})`}</span>
                   </summary>
                   {a.mode === "paper" && <p className="mt-2 text-sm text-muted">{d.teacher.paperEntry}</p>}
+                  {(a.status === "submitted" || a.status === "graded") && (
+                    <form action={returnWorkAction} className="mt-2">
+                      <input type="hidden" name="assignment_id" value={a.id} />
+                      <SubmitButton className="btn btn-ghost btn-sm" confirmText={d.teacher.returnWorkConfirm}><Undo2 className="w-4 h-4" /> {d.teacher.returnWork}</SubmitButton>
+                    </form>
+                  )}
                   <div className="mt-3 space-y-3">
                     {a.content.tasks.map((t, i) => {
                       const r = a.responses.find((x) => x.task_id === t.id);

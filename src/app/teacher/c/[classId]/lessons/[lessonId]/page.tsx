@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { CheckCircle2, Undo2, Flag, Timer, Plus, FileDown, CheckSquare, History } from "lucide-react";
+import { CheckCircle2, Undo2, Flag, Timer, Plus, FileDown, CheckSquare, History, Trash2, Copy } from "lucide-react";
 import { requireLesson } from "@/lib/teacher";
 import { getDict } from "@/lib/i18n/server";
 import { fmt, pick } from "@/lib/i18n";
@@ -14,7 +14,7 @@ import { LessonPlanTable, CriteriaTable } from "@/components/LessonTables";
 import { LessonEditor } from "@/components/teacher/LessonEditor";
 import { RegenPanel } from "@/components/teacher/RegenPanel";
 import { PublishButton } from "@/components/teacher/PublishButton";
-import { setLessonStatusAction, stageControlAction, setModeAction, restoreVersionAction } from "@/app/teacher/actions";
+import { setLessonStatusAction, stageControlAction, setModeAction, restoreVersionAction, deleteLessonAction, duplicateLessonAction } from "@/app/teacher/actions";
 
 const IMG: Record<string, string> = {
   sport: "/images/interest-sport-ball.webp",
@@ -98,6 +98,14 @@ export default async function LessonPage({ params }: { params: Promise<{ classId
                 <SubmitButton className="btn btn-outline btn-sm"><Flag className="w-4 h-4" /> {d.teacher.complete}</SubmitButton>
               </form>
             )}
+            <form action={duplicateLessonAction}>
+              <input type="hidden" name="lesson_id" value={lessonId} />
+              <SubmitButton className="btn btn-ghost btn-sm" pendingText={d.common.loading}><Copy className="w-4 h-4" /> {d.teacher.duplicateLesson}</SubmitButton>
+            </form>
+            <form action={deleteLessonAction}>
+              <input type="hidden" name="lesson_id" value={lessonId} />
+              <SubmitButton className="btn btn-ghost btn-sm !text-danger" confirmText={d.teacher.deleteLessonConfirm}><Trash2 className="w-4 h-4" /> {d.teacher.deleteLesson}</SubmitButton>
+            </form>
           </div>
         </div>
       </div>

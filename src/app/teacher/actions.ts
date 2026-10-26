@@ -39,6 +39,16 @@ export async function deleteClassAction(fd: FormData) {
   redirect("/teacher");
 }
 
+export async function updateClassAction(fd: FormData) {
+  const { sb } = await requireTeacher();
+  const classId = id(fd.get("class_id"));
+  const name = String(fd.get("name") ?? "").trim().slice(0, 60);
+  const grade = String(fd.get("grade") ?? "").trim().slice(0, 60);
+  if (!name) return;
+  await sb.from("classes").update({ name, grade_level: grade }).eq("id", classId);
+  revalidatePath("/teacher", "layout");
+}
+
 // ---------- Students ----------
 function splitName(line: string) {
   const parts = line.trim().replace(/\s+/g, " ").split(" ");
@@ -76,6 +86,22 @@ export async function removeStudentAction(fd: FormData) {
   const { data: st } = await sb.from("students").select("class_id").eq("id", sid).single();
   await sb.from("students").delete().eq("id", sid);
   if (st) revalidatePath(`/teacher/c/${st.class_id}`, "layout");
+}
+
+export async function updateStudentAction(fd: FormData) {
+  const { sb } = await requireTeacher();
+  const sid = id(fd.get("student_id"));
+  const first_name = String(fd.get("first_name") ?? "").trim().slice(0, 40);
+  const last_name = String(fd.get("last_name") ?? "").trim().slice(0, 60);
+  if (!first_name) return;
+  const { data: st } = await sb.from("students").update({ first_name, last_name }).eq("id", sid).select("class_id").single();
+  if (st) revalidatePath(`/teacher/c/${st.class_id}`, "layout");
+}
+
+export async function deleteObservationAction(fd: FormData) {
+  const { sb } = await requireTeacher();
+  await sb.from("observations").delete().eq("id", id(fd.get("observation_id")));
+  revalidatePath(`/teacher`, "layout");
 }
 
 export async function addObservationAction(fd: FormData) {
@@ -179,6 +205,51 @@ export async function restoreVersionAction(fd: FormData) {
   await sb.from("lesson_versions").insert({ lesson_id: lessonId, version, content: row.content, note: `restored ${v}` });
   await sb.from("lessons").update({ content: row.content, version, status: "draft", updated_at: new Date().toISOString() }).eq("id", lessonId);
   revalidatePath(lessonPath(lesson));
+}
+
+/** Deletes a lesson with all its student work. */
+export async function deleteLessonAction(fd: FormData) {
+  const lessonId = id(fd.get("lesson_id"));
+  const { sb, lesson } = await ownLesson(lessonId);
+  await sb.from("lessons").delete().eq("id", lessonId);
+  revalidatePath(`/teacher/c/${lesson.class_id}`, "layout");
+  redirect(`/teacher/c/${lesson.class_id}/lessons`);
+}
+
+/** A published lesson cannot change (students already have it), so the teacher edits a draft copy. */
+export async function duplicateLessonAction(fd: FormData) {
+  const lessonId = id(fd.get("lesson_id"));
+  const { sb, user, lesson } = await ownLesson(lessonId);
+  const { data: copy } = await sb
+    .from("lessons")
+    .insert({
+      class_id: lesson.class_id,
+      teacher_id: user.id,
+      topic: lesson.topic,
+      objective: lesson.objective,
+      duration_min: lesson.duration_min,
+      source_material: lesson.source_material,
+      requirements: lesson.requirements,
+      content: lesson.content,
+      addie: lesson.addie,
+      is_demo: lesson.is_demo,
+      ai_provider: lesson.ai_provider,
+      ai_model: lesson.ai_model,
+    })
+    .select("id")
+    .single();
+  if (!copy) return;
+  await sb.from("lesson_versions").insert({ lesson_id: copy.id, version: 1, content: lesson.content, note: "copy" });
+  revalidatePath(`/teacher/c/${lesson.class_id}`, "layout");
+  redirect(`/teacher/c/${lesson.class_id}/lessons/${copy.id}`);
+}
+
+/** Sends submitted work back to the student so they can change their answers and submit again. */
+export async function returnWorkAction(fd: FormData) {
+  const { sb } = await requireTeacher();
+  const aid = id(fd.get("assignment_id"));
+  await sb.from("assignments").update({ status: "in_progress", submitted_at: null }).eq("id", aid);
+  revalidatePath(`/teacher`, "layout");
 }
 
 export async function stageControlAction(fd: FormData) {
