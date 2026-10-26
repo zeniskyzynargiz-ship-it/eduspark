@@ -1,0 +1,78 @@
+import type { ClassProfile } from "../profile";
+
+export type LessonInput = {
+  topic: string;
+  objective: string;
+  duration: number;
+  gradeLevel: string;
+  sourceMaterial: string;
+  requirements: string;
+};
+
+export const SCHEMA_TEXT = `
+Return ONE JSON object, no prose, exactly in this shape (Bi = {"kk": "...Kazakh...", "en": "...English..."}):
+{
+  "expected_outcomes": [Bi, ...],
+  "addie_rationale": {"analyze": Bi, "design": Bi, "develop": Bi, "implement": Bi, "evaluate": Bi},
+  "stages": [{"title": Bi, "minutes": int, "teacher_activity": Bi, "student_activity": Bi, "resources": "string", "evidence": Bi}],
+  "criteria": [{"id": "c1", "name": Bi, "descriptors": [{"text": Bi, "points": int}]}],
+  "variants": [{"interest": "sport|music|travel|technology|games|animals|art|other", "context": Bi, "tasks": [Task, ...]}],
+  "common_tasks": [Task, ...],
+  "support": {"vocabulary": [{"en": "word", "kk": "сөз"}], "sentence_frames": ["I think ... because ..."], "explanation": Bi},
+  "reflection_questions": [Bi, ...],
+  "homework": Bi
+}
+Task is one of (every task also has "id" (unique, short), "instruction": Bi, "prompt": "English text", "points": int, "criterion_id": "c1", optional "hint": Bi):
+  {"type": "choice", "options": ["..."], "correct": [index, ...]}
+  {"type": "match", "pairs": [{"left": "...", "right": "..."}]}
+  {"type": "gap", "text": "Sentence with ___ for each blank", "answers": [["accepted", "also accepted"], ...]}
+  {"type": "short", "sample_answer": "..."}
+  {"type": "voice", "sample_answer": "..."}
+  {"type": "pair", "roles": ["Student A: ...", "Student B: ..."]}
+`;
+
+export const RULES = `
+Rules (all are checked by software; a reply that breaks one is rejected):
+1. Keep the teacher's learning objective word for word in meaning. Do not invent curriculum codes.
+2. Stage minutes must add up EXACTLY to the lesson duration. Every stage has teacher activity, student activity, resources and assessment evidence.
+3. Make one variant per listed interest. Variants change only the context (texts, examples, names of things). Every variant must have the same number of points for each criterion, so the core assessment stays the same.
+4. For every criterion the descriptor points must add up to the points of the tasks that use that criterion (in one variant, including common_tasks). Choose points that fit the tasks; do not default to 10.
+5. common_tasks must contain one "pair" task (pair or group work) and one shared final task for the whole class. They are added to every variant.
+6. The individual work for each student must fit inside the lesson time.
+7. English is the subject: task texts, dialogues and grammar items stay in English. Instructions, hints, stage descriptions and criteria are given in BOTH Kazakh and English.
+8. Gap tasks: the number of ___ blanks equals the number of answer lists. List every acceptable answer.
+9. Offer support (word list, sentence frames, short explanation) that matches the difficulties reported. Support can fade gradually; never lower a student's level because of one mistake.
+10. Use only the class data given. If data is missing, say so in addie_rationale.analyze instead of guessing. Correlation is not causation; do not claim the lesson will raise motivation.
+11. Student identities are anonymous references (S1, S2...). Never invent names of real students.
+`;
+
+export function lessonSystemPrompt() {
+  return `You are an experienced English teacher and instructional designer using the ADDIE model. You design one lesson for a Kazakhstan school class. ${RULES}\n${SCHEMA_TEXT}`;
+}
+
+export function lessonUserPrompt(input: LessonInput, profile: ClassProfile, interests: string[]) {
+  return JSON.stringify(
+    {
+      lesson: {
+        topic: input.topic,
+        learning_objective: input.objective,
+        duration_minutes: input.duration,
+        grade_level: input.gradeLevel,
+        source_material: input.sourceMaterial.slice(0, 6000),
+        extra_requirements: input.requirements.slice(0, 2000),
+      },
+      make_variants_for_interests: interests,
+      class_data: profile.forAI,
+    },
+    null,
+    1,
+  );
+}
+
+export function partSystemPrompt(part: string) {
+  return `You are editing one part of an existing English lesson plan. Return ONE JSON object containing only the key "${part}" with its new value, in the same format as before. Keep everything consistent with the rest of the lesson (criteria ids, points per criterion, total minutes). ${RULES}\n${SCHEMA_TEXT}`;
+}
+
+export function writingSystemPrompt() {
+  return `You help an English teacher pre-assess a short student answer. You only suggest; the teacher decides. Judge only against the given criterion descriptors and the task. Be kind and specific. Return ONE JSON object: {"score": number, "feedback": {"kk": "...", "en": "..."}} where score is between 0 and max_points (half points allowed).`;
+}
