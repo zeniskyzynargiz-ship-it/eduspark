@@ -20,7 +20,8 @@ export function aiConfig(): AIConfig | null {
   const model = (process.env.AI_MODEL || "").trim() || (provider === "gemini" ? "gemini-2.5-flash" : "");
   const apiKey = (process.env.AI_API_KEY || "").trim();
   if (!provider || !model || !apiKey) return null;
-  const timeoutMs = Math.max(10, Number(process.env.AI_TIMEOUT_SECONDS || 90)) * 1000;
+  // A full lesson is a large JSON answer. Two calls (generate + one repair) must fit in the 300 s route limit.
+  const timeoutMs = Math.min(140, Math.max(10, Number(process.env.AI_TIMEOUT_SECONDS || 140))) * 1000;
   const baseUrl = process.env.AI_BASE_URL?.trim() || undefined;
   // Google Gemini through its OpenAI-compatible endpoint.
   if (provider === "gemini")
@@ -54,6 +55,10 @@ async function once(c: AIConfig, system: string, user: string, maxTokens: number
         headers: { "content-type": "application/json", authorization: `Bearer ${c.apiKey}` },
         body: JSON.stringify({
           model: c.model,
+          max_tokens: maxTokens,
+          response_format: { type: "json_object" },
+          // Gemini 2.5 "thinks" before answering by default, which makes long lessons time out.
+          ...(c.label === "gemini" ? { reasoning_effort: "low" } : {}),
           messages: [
             { role: "system", content: system },
             { role: "user", content: user },
