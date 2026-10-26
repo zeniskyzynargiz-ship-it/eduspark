@@ -26,15 +26,15 @@ export function RegisterForm() {
         <input id="email" name="email" type="email" required autoComplete="email" inputMode="email" className="input" placeholder="name@mail.kz" />
       </div>
       <PasswordField name="password" label={d.auth.password} autoComplete="new-password" value={p1} onChange={setP1} />
-      <p className={`text-xs flex items-center gap-1 ${strongEnough(p1) ? "text-leaf-700" : "text-muted"}`}>
-        {strongEnough(p1) ? <Check className="w-3.5 h-3.5" /> : null}
+      <p className={`text-xs flex items-center gap-1 ${strongEnough(p1) ? "text-leaf-700" : p1.length > 0 ? "text-danger font-semibold" : "text-muted"}`}>
+        {strongEnough(p1) ? <Check className="w-3.5 h-3.5" /> : p1.length > 0 ? <X className="w-3.5 h-3.5" /> : null}
         {d.auth.passwordHint}
       </p>
       <PasswordField name="password2" label={d.auth.password2} autoComplete="new-password" value={p2} onChange={setP2} />
       {p2.length > 0 && (
         <p className={`text-xs flex items-center gap-1 ${match ? "text-leaf-700" : "text-danger"}`}>
           {match ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
-          {match ? "✓" : d.auth.mismatch}
+          {match ? d.auth.match : d.auth.mismatch}
         </p>
       )}
       <button className="btn btn-primary w-full" disabled={pending || !match || !strongEnough(p1)}>
