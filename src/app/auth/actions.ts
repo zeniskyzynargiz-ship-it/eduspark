@@ -15,7 +15,7 @@ async function origin() {
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
   const proto = h.get("x-forwarded-proto") ?? "https";
-  return process.env.NEXT_PUBLIC_SITE_URL ? env.siteUrl() : `${proto}://${host}`;
+  return host ? `${proto}://${host}` : env.siteUrl();
 }
 
 /** The domain must be able to receive mail. The confirmation email then proves the address is real. */

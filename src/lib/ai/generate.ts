@@ -35,7 +35,7 @@ export async function generateLesson(input: LessonInput, profile: ClassProfile, 
     result = check(extractJson(repair), input.duration);
     if (!result.ok) throw new AIError("invalid_output", result.errors.join(" "));
   }
-  return { content: result.content, isDemo: false, provider: cfg.provider, model: cfg.model };
+  return { content: result.content, isDemo: false, provider: cfg.label, model: cfg.model };
 }
 
 export const REGEN_PARTS = ["stages", "variants", "criteria", "support", "homework", "reflection_questions", "common_tasks"] as const;

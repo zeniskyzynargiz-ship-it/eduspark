@@ -13,22 +13,26 @@ export class AIError extends Error {
   }
 }
 
-export type AIConfig = { provider: "anthropic" | "openai"; model: string; apiKey: string; baseUrl?: string; timeoutMs: number };
+export type AIConfig = { provider: "anthropic" | "openai"; label: string; model: string; apiKey: string; baseUrl?: string; timeoutMs: number };
 
 export function aiConfig(): AIConfig | null {
   const provider = (process.env.AI_PROVIDER || "").trim().toLowerCase();
-  const model = (process.env.AI_MODEL || "").trim();
+  const model = (process.env.AI_MODEL || "").trim() || (provider === "gemini" ? "gemini-2.5-flash" : "");
   const apiKey = (process.env.AI_API_KEY || "").trim();
   if (!provider || !model || !apiKey) return null;
-  if (provider !== "anthropic" && provider !== "openai") return null;
   const timeoutMs = Math.max(10, Number(process.env.AI_TIMEOUT_SECONDS || 90)) * 1000;
-  return { provider, model, apiKey, baseUrl: process.env.AI_BASE_URL?.trim() || undefined, timeoutMs };
+  const baseUrl = process.env.AI_BASE_URL?.trim() || undefined;
+  // Google Gemini through its OpenAI-compatible endpoint.
+  if (provider === "gemini")
+    return { provider: "openai", label: "gemini", model, apiKey, baseUrl: baseUrl || "https://generativelanguage.googleapis.com/v1beta/openai", timeoutMs };
+  if (provider !== "anthropic" && provider !== "openai") return null;
+  return { provider, label: provider, model, apiKey, baseUrl, timeoutMs };
 }
 
 /** Public description for the settings page (no secrets). */
 export function aiStatus() {
   const c = aiConfig();
-  return c ? { configured: true as const, provider: c.provider, model: c.model } : { configured: false as const };
+  return c ? { configured: true as const, provider: c.label, model: c.model } : { configured: false as const };
 }
 
 async function once(c: AIConfig, system: string, user: string, maxTokens: number): Promise<string> {
