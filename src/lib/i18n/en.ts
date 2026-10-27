@@ -86,7 +86,7 @@ export const en: typeof kk = {
     limits4: "The result of one lesson is not evidence of long-term motivation.",
   },
   sample: {
-    pageTitle: "Sample lesson (demo)",
+    pageTitle: "Sample lesson",
     topic: "Topic", objective: "Learning objective", duration: "Duration",
     demoTopic: "My free time", demoObjective: "Find key information in a short text about hobbies and use the Present Simple",
     stage: "Stage", teacherAct: "Teacher activity", studentAct: "Student activity", resources: "Resources", evidence: "Assessment evidence",

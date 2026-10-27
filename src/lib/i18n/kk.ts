@@ -84,7 +84,7 @@ export const kk = {
     limits4: "Бір сабақтың нәтижесі ұзақ мерзімді мотивацияның дәлелі емес.",
   },
   sample: {
-    pageTitle: "Сабақ үлгісі (демо)",
+    pageTitle: "Сабақ үлгісі",
     topic: "Тақырып", objective: "Оқу мақсаты", duration: "Ұзақтығы",
     demoTopic: "My free time", demoObjective: "Хоббиі туралы қысқа мәтіннен негізгі ақпаратты табу және Present Simple-ді қолдану",
     stage: "Кезең", teacherAct: "Мұғалім әрекеті", studentAct: "Оқушы әрекеті", resources: "Ресурс", evidence: "Бағалау дәлелі",
