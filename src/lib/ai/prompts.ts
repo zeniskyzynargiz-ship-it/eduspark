@@ -41,6 +41,7 @@ Rules (all are checked by software; a reply that breaks one is rejected):
 5. common_tasks must contain one "pair" task (pair or group work) and one shared final task for the whole class. They are added to every variant.
 6. The individual work for each student must fit inside the lesson time.
 7. English is the subject: task texts, dialogues and grammar items stay in English. Instructions, hints, stage descriptions and criteria are given in BOTH Kazakh and English.
+8. Every text is read by teachers and students. Never mention JSON, ids, keys or field names (such as t1, common_tasks, past_trip_pair, S1) in any text; describe tasks and students in plain words.
 8. Gap tasks: the number of ___ blanks equals the number of answer lists. List every acceptable answer.
 9. Offer support (word list, sentence frames, short explanation) that matches the difficulties reported. Support can fade gradually; never lower a student's level because of one mistake.
 10. Use only the class data given. If data is missing, say so in addie_rationale.analyze instead of guessing. Correlation is not causation; do not claim the lesson will raise motivation.

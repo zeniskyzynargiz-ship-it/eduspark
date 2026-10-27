@@ -1,5 +1,6 @@
 import type { Stage, Criterion } from "@/lib/lesson";
 import { pick, fmt, type Dict, type Lang } from "@/lib/i18n";
+import { cleanText } from "@/lib/lesson-fix";
 
 export function LessonPlanTable({ stages, d, lang, duration }: { stages: Stage[]; d: Dict; lang: Lang; duration: number }) {
   const sum = stages.reduce((s, x) => s + x.minutes, 0);
@@ -19,12 +20,12 @@ export function LessonPlanTable({ stages, d, lang, duration }: { stages: Stage[]
         <tbody>
           {stages.map((s, i) => (
             <tr key={i}>
-              <td className="font-semibold">{pick(s.title, lang)}</td>
+              <td className="font-semibold">{cleanText(pick(s.title, lang))}</td>
               <td>{s.minutes}</td>
-              <td>{pick(s.teacher_activity, lang)}</td>
-              <td>{pick(s.student_activity, lang)}</td>
-              <td>{s.resources}</td>
-              <td>{pick(s.evidence, lang)}</td>
+              <td>{cleanText(pick(s.teacher_activity, lang))}</td>
+              <td>{cleanText(pick(s.student_activity, lang))}</td>
+              <td>{cleanText(s.resources)}</td>
+              <td>{cleanText(pick(s.evidence, lang))}</td>
             </tr>
           ))}
         </tbody>

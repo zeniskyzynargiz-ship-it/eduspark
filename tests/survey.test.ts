@@ -71,3 +71,11 @@ test("every variant carries a short theory before the tasks", async () => {
   assert.equal(n.variants[0].theory.explanation.kk, "Past Simple: add -ed");
   assert.deepEqual(n.variants[0].theory.examples, ["I played the guitar.", "She sang."]);
 });
+
+test("technical ids are removed from readable lesson text", () => {
+  const n = normalizeRaw({ stages: [{ title: "Pair work", minutes: 10, teacher_activity: { kk: "Жұптық тапсырманы түсіндіреді (past_trip_pair).", en: "Explains the task (t1, t2, t3)." }, student_activity: "x", evidence: "Answers (whole_class_voice)", resources: "Cards (common_tasks), timer" }] }) as { stages: { teacher_activity: { kk: string; en: string }; evidence: { kk: string }; resources: string }[] };
+  assert.equal(n.stages[0].teacher_activity.kk, "Жұптық тапсырманы түсіндіреді.");
+  assert.equal(n.stages[0].teacher_activity.en, "Explains the task.");
+  assert.equal(n.stages[0].evidence.kk, "Answers");
+  assert.equal(n.stages[0].resources, "Cards, timer");
+});

@@ -10,6 +10,7 @@ import { TaskPreview } from "@/components/TaskPreview";
 import { LessonPlanTable, CriteriaTable } from "@/components/LessonTables";
 import type { Dict, Lang } from "@/lib/i18n";
 import { interestLabel } from "@/lib/survey";
+import { cleanText } from "@/lib/lesson-fix";
 import { TheoryCard } from "@/components/TheoryCard";
 import type { Theory } from "@/lib/lesson";
 
@@ -57,7 +58,7 @@ export default async function PrintLesson({ params, searchParams }: { params: Pr
         <h2 className="font-bold mt-3">{d.teacher.rationale}</h2>
         <dl className="text-sm">
           {(["analyze", "design", "develop", "implement", "evaluate"] as const).map((k) => (
-            <div key={k} className="avoid-break"><dt className="inline font-bold">{d.addie.stages[k].name}: </dt><dd className="inline">{pick(c.addie_rationale[k], lang)}</dd></div>
+            <div key={k} className="avoid-break"><dt className="inline font-bold">{d.addie.stages[k].name}: </dt><dd className="inline">{cleanText(pick(c.addie_rationale[k], lang))}</dd></div>
           ))}
         </dl>
         <h2 className="font-bold mt-3 mb-1">{d.teacher.plan}</h2>

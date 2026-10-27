@@ -16,6 +16,7 @@ import { RegenPanel } from "@/components/teacher/RegenPanel";
 import { PublishButton } from "@/components/teacher/PublishButton";
 import { setLessonStatusAction, stageControlAction, setModeAction, rematchVariantsAction, restoreVersionAction, deleteLessonAction, duplicateLessonAction } from "@/app/teacher/actions";
 import { interestLabel } from "@/lib/survey";
+import { cleanText } from "@/lib/lesson-fix";
 import { TheoryCard } from "@/components/TheoryCard";
 
 const IMG: Record<string, string> = {
@@ -216,7 +217,7 @@ export default async function LessonPage({ params, searchParams }: { params: Pro
             <h2 className="font-bold text-lg">{d.teacher.rationale}</h2>
             <dl className="mt-2 grid gap-2 text-sm">
               {(["analyze", "design", "develop", "implement", "evaluate"] as const).map((k) => (
-                <div key={k} className="grid sm:grid-cols-[140px_1fr] gap-2"><dt className="font-bold text-leaf-800">{d.addie.stages[k].name}</dt><dd>{pick(c.addie_rationale[k], lang)}</dd></div>
+                <div key={k} className="grid sm:grid-cols-[140px_1fr] gap-2"><dt className="font-bold text-leaf-800">{d.addie.stages[k].name}</dt><dd>{cleanText(pick(c.addie_rationale[k], lang))}</dd></div>
               ))}
             </dl>
           </section>

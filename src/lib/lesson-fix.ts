@@ -60,11 +60,33 @@ function cleanTask(t: unknown, i: number): Task | null {
   return fallback.success ? fallback.data : null;
 }
 
+/** Removes technical ids the AI sometimes leaks into readable text, e.g. "(t1, t2)" or "(past_trip_pair)". */
+const LEAK = /\s*\((?:\s*(?:t\d+|c\d+|[a-z]+(?:_[a-z0-9]+)+)\s*,?)+\)/g;
+/** Readable text without leaked ids or sentences about the JSON format. Also used when showing older lessons. */
+export function cleanText(t: string): string {
+  return t
+    .split(/(?<=[.!?])\s+/)
+    .filter((sentence) => !/\bJSON\b/i.test(sentence))
+    .join(" ")
+    .replace(LEAK, "")
+    .replace(/\b(?:common_tasks|task_plan)\b/g, "")
+    .replace(/\s+([.,;:])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+function scrub(v: unknown): unknown {
+  if (typeof v === "string") return cleanText(v);
+  if (Array.isArray(v)) return v.map(scrub);
+  if (isObj(v)) return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, scrub(x)]));
+  return v;
+}
+
 /** Light clean-up of the raw JSON before the schema check. */
 export function normalizeRaw(raw: unknown): unknown {
   if (!isObj(raw)) return raw;
   let x = stringsToBi(raw) as J;
   x = fillBi(x) as J;
+  for (const k of ["stages", "addie_rationale", "expected_outcomes"]) if (k in x) x[k] = scrub(x[k]);
   if (Array.isArray(x.stages))
     x.stages = (x.stages as J[]).map((s) => {
       // "resources" is plain text; the AI sometimes sends {kk, en} or a list.
