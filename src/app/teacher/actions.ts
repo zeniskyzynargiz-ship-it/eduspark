@@ -169,9 +169,49 @@ export async function publishLessonAction(_: ActionResult, fd: FormData): Promis
     const { error } = await sb.from("assignments").upsert(rows, { onConflict: "lesson_id,student_id", ignoreDuplicates: true });
     if (error) return { error: "generic" };
   }
+  await rematchVariants(sb, lessonId, content, lesson, latest);
   await sb.from("lessons").update({ status: "published", published_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", lessonId);
   revalidatePath(lessonPath(lesson));
   return { ok: true };
+}
+
+/** Moves every not-yet-started assignment to the variant that matches the student's latest survey. */
+async function rematchVariants(
+  sb: Awaited<ReturnType<typeof requireTeacher>>["sb"],
+  lessonId: string,
+  content: LessonContent,
+  lesson: { topic: string; objective: string },
+  latest: Map<string, string[]>,
+  includeStarted = false,
+) {
+  const available = content.variants.map((v) => v.interest);
+  const statuses = includeStarted ? ["assigned", "in_progress"] : ["assigned"];
+  const { data: rows } = await sb.from("assignments").select("id, student_id, variant_key, status").eq("lesson_id", lessonId).in("status", statuses);
+  let moved = 0;
+  for (const r of rows ?? []) {
+    const key = pickVariant(latest.get(r.student_id), available);
+    if (key === r.variant_key) continue;
+    const { data: done } = await sb.from("assignments").update({ variant_key: key, content: buildAssignmentContent(content, key, lesson), status: "assigned" }).eq("id", r.id).in("status", statuses).select("id");
+    // Answers written for another variant's texts no longer fit, so a moved, unsent work starts fresh.
+    if (done?.length && r.status === "in_progress") await sb.from("responses").delete().eq("assignment_id", r.id);
+    moved++;
+  }
+  return moved;
+}
+
+export async function rematchVariantsAction(fd: FormData) {
+  const lessonId = id(fd.get("lesson_id"));
+  const { sb, lesson } = await ownLesson(lessonId);
+  if (!lesson.content) return;
+  const { data: as } = await sb.from("assignments").select("student_id").eq("lesson_id", lessonId);
+  const ids = (as ?? []).map((a) => a.student_id);
+  const { data: surveys } = ids.length
+    ? await sb.from("survey_responses").select("student_id, interests, version").in("student_id", ids).order("version", { ascending: false })
+    : { data: [] as Pick<SurveyRow, "student_id" | "interests" | "version">[] };
+  const latest = new Map<string, string[]>();
+  for (const s of surveys ?? []) if (!latest.has(s.student_id)) latest.set(s.student_id, s.interests);
+  await rematchVariants(sb, lessonId, lesson.content as LessonContent, lesson, latest, true);
+  revalidatePath(lessonPath(lesson));
 }
 
 export async function saveLessonContentAction(_: ActionResult, fd: FormData): Promise<ActionResult> {

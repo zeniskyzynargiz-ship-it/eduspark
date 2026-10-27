@@ -36,6 +36,15 @@ export function AboutContent({ d }: { d: Dict }) {
           <p className="text-lg font-medium text-leaf-900">{a.conclusion}</p>
           <p className="text-sm text-muted mt-3"><b>{a.stackTitle}:</b> {a.stack}</p>
         </div>
+        <div className="card p-6 mt-4">
+          <p className="font-semibold">
+            {a.authorsLabel}: <span className="text-leaf-800">Жеңісқызы Наргиз, Серікбай Марал</span>
+          </p>
+          <a href="https://youtube.com/shorts/bA66ayNgoCc?feature=share" target="_blank" rel="noopener noreferrer" className="btn btn-primary mt-3 inline-flex">
+            ▶ {a.authorsVideo}
+          </a>
+          <p className="text-xs text-muted mt-2 break-all">https://youtube.com/shorts/bA66ayNgoCc</p>
+        </div>
       </section>
     </>
   );

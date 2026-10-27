@@ -45,9 +45,18 @@ export async function studentLessons(classId: string): Promise<(StudentLesson & 
 export async function ensureAssignment(studentId: string, lesson: { id: string; topic: string; objective: string; content: LessonContent }) {
   const db = supabaseAdmin();
   const { data: existing } = await db.from("assignments").select("*").eq("lesson_id", lesson.id).eq("student_id", studentId).maybeSingle();
-  if (existing) return existing as AssignmentRow;
   const survey = await latestSurvey(studentId);
   const key = pickVariant(survey?.interests, lesson.content.variants.map((v) => v.interest));
+  if (existing) {
+    // Work not started yet (e.g. published before the survey was filled in): move it to the
+    // variant that matches the student's current interests.
+    if (existing.status === "assigned" && existing.variant_key !== key) {
+      const content = buildAssignmentContent(lesson.content, key, lesson);
+      const { data: moved } = await db.from("assignments").update({ variant_key: key, content }).eq("id", existing.id).eq("status", "assigned").select("*").maybeSingle();
+      if (moved) return moved as AssignmentRow;
+    }
+    return existing as AssignmentRow;
+  }
   await db
     .from("assignments")
     .upsert({ lesson_id: lesson.id, student_id: studentId, variant_key: key, content: buildAssignmentContent(lesson.content, key, lesson) }, { onConflict: "lesson_id,student_id", ignoreDuplicates: true });

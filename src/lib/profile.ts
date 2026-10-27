@@ -126,18 +126,35 @@ export function buildProfile(students: StudentRow[], latest: Map<string, SurveyR
   };
 }
 
-/** Interests to build variants for: those chosen in the class, otherwise the four main directions. */
-export function variantInterests(p: ClassProfile, max = 4): string[] {
-  const chosen = Object.entries(p.interestCounts)
-    .filter(([, n]) => n > 0)
-    .sort((a, b) => b[1] - a[1])
-    .map(([k]) => k)
-    .slice(0, max);
+/**
+ * Interests to build variants for. Every student who filled in the survey must find at least one
+ * of their own choices among the variants, so the list grows until everyone is covered (up to `max`);
+ * the most popular choices are taken first. With no survey, the four main directions are used.
+ */
+export function variantInterests(p: ClassProfile, max = 6): string[] {
+  const count = (k: string) => p.interestCounts[k] ?? 0;
+  const chosen: string[] = [];
+  const students = [...p.latest.values()].map((s) => s.interests.filter(Boolean)).filter((xs) => xs.length);
+  // Students with fewer choices first: they are the hardest to cover.
+  students.sort((a, b) => a.length - b.length);
+  for (const xs of students) {
+    if (chosen.length >= max) break;
+    if (xs.some((x) => chosen.includes(x))) continue;
+    chosen.push([...xs].sort((a, b) => count(b) - count(a))[0]);
+  }
+  // Fill up with the next most popular choices so there are at least four contexts.
+  for (const [k] of Object.entries(p.interestCounts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1])) {
+    if (chosen.length >= Math.min(4, max)) break;
+    if (!chosen.includes(k)) chosen.push(k);
+  }
+  chosen.sort((a, b) => count(b) - count(a));
   return chosen.length ? chosen : ["sport", "music", "travel", "technology"];
 }
 
 /** Variant for one student: first of their latest interests that has a variant. */
 export function pickVariant(interests: string[] | undefined, available: string[]) {
   for (const i of interests ?? []) if (available.includes(i)) return i;
+  // No match: a general "other" context fits better than someone else's interest.
+  if (interests?.length && available.includes("other")) return "other";
   return available[0];
 }

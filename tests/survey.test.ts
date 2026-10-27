@@ -44,3 +44,16 @@ import { normalizeRaw } from "../src/lib/lesson-fix";
     assert.equal(interestLabel({ interests: { sport: "Спорт" } }, "+Кино"), "Кино");
   });
 }
+
+test("every student gets a variant from their own interests", async () => {
+  const { buildProfile, variantInterests, pickVariant } = await import("../src/lib/profile");
+  const st = (id: string) => ({ id, first_name: id, last_name: "", active: true });
+  const sv = (id: string, interests: string[]) => ({ id, student_id: id, version: 1, interests, other_interest: "", difficulties: [], interest_scale: null, confidence_scale: null, meaning_scale: null, support: [], support_other: "", created_at: "" });
+  const people: [string, string[]][] = [["a", ["sport"]], ["b", ["sport"]], ["c", ["music"]], ["d", ["technology"]], ["e", ["animals"]], ["f", ["travel", "games"]], ["g", ["art"]]];
+  const p = buildProfile(people.map(([i]) => st(i)), new Map(people.map(([i, xs]) => [i, sv(i, xs)])), new Map());
+  const v = variantInterests(p);
+  assert.ok(v.length <= 6);
+  for (const [, xs] of people.slice(0, 6)) assert.ok(xs.some((x) => v.includes(x)), `${xs} not covered by ${v}`);
+  assert.equal(pickVariant(["travel", "games"], ["sport", "travel"]), "travel");
+  assert.equal(pickVariant(["art"], ["sport", "other"]), "other");
+});

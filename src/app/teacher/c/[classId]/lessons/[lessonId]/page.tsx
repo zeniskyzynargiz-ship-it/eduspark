@@ -14,7 +14,7 @@ import { LessonPlanTable, CriteriaTable } from "@/components/LessonTables";
 import { LessonEditor } from "@/components/teacher/LessonEditor";
 import { RegenPanel } from "@/components/teacher/RegenPanel";
 import { PublishButton } from "@/components/teacher/PublishButton";
-import { setLessonStatusAction, stageControlAction, setModeAction, restoreVersionAction, deleteLessonAction, duplicateLessonAction } from "@/app/teacher/actions";
+import { setLessonStatusAction, stageControlAction, setModeAction, rematchVariantsAction, restoreVersionAction, deleteLessonAction, duplicateLessonAction } from "@/app/teacher/actions";
 import { interestLabel } from "@/lib/survey";
 
 const IMG: Record<string, string> = {
@@ -37,10 +37,16 @@ export default async function LessonPage({ params, searchParams }: { params: Pro
 
   const [{ data: assignments }, { data: versions }] = await Promise.all([
     lesson.status === "published" || lesson.status === "completed"
-      ? sb.from("assignments").select("id, variant_key, status, mode, students(first_name, last_name)").eq("lesson_id", lessonId)
+      ? sb.from("assignments").select("id, student_id, variant_key, status, mode, students(first_name, last_name)").eq("lesson_id", lessonId)
       : Promise.resolve({ data: [] as never[] }),
     sb.from("lesson_versions").select("version, note, created_at").eq("lesson_id", lessonId).order("version", { ascending: false }).limit(10),
   ]);
+  const sids = ((assignments ?? []) as unknown as { student_id: string }[]).map((a) => a.student_id);
+  const { data: surveys } = sids.length
+    ? await sb.from("survey_responses").select("student_id, interests, version").in("student_id", sids).order("version", { ascending: false })
+    : { data: [] as { student_id: string; interests: string[]; version: number }[] };
+  const chosen = new Map<string, string[]>();
+  for (const s of surveys ?? []) if (!chosen.has(s.student_id)) chosen.set(s.student_id, s.interests);
   const statusLabel: Record<string, string> = { assigned: d.teacher.notStarted, in_progress: d.teacher.inProgress, submitted: d.teacher.submitted, graded: d.teacher.graded };
 
   return (
@@ -157,14 +163,25 @@ export default async function LessonPage({ params, searchParams }: { params: Pro
 
       {(assignments?.length ?? 0) > 0 && (
         <section className="card p-5 mb-4 overflow-x-auto">
-          <h2 className="font-bold text-lg mb-2">{d.teacher.assignments}</h2>
-          <table className="table min-w-[560px]">
-            <thead><tr><th>{d.teacher.firstName}</th><th>{d.teacher.variants}</th><th>{d.teacher.status.published}</th><th>{d.teacher.mode}</th></tr></thead>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <h2 className="font-bold text-lg">{d.teacher.assignments}</h2>
+            <form action={rematchVariantsAction}>
+              <input type="hidden" name="lesson_id" value={lessonId} />
+              <SubmitButton className="btn btn-outline btn-sm" confirmText={d.teacher.rematchConfirm}>{d.teacher.rematch}</SubmitButton>
+            </form>
+          </div>
+          <p className="text-xs text-muted mb-2">{d.teacher.rematchHint}</p>
+          <table className="table min-w-[640px]">
+            <thead><tr><th>{d.teacher.firstName}</th><th>{d.teacher.chosenInterests}</th><th>{d.teacher.variants}</th><th>{d.teacher.status.published}</th><th>{d.teacher.mode}</th></tr></thead>
             <tbody>
-              {(assignments as unknown as { id: string; variant_key: string; status: string; mode: string; students: { first_name: string; last_name: string } }[]).map((a) => (
+              {(assignments as unknown as { id: string; student_id: string; variant_key: string; status: string; mode: string; students: { first_name: string; last_name: string } }[]).map((a) => (
                 <tr key={a.id}>
                   <td>{a.students?.first_name} {a.students?.last_name}</td>
-                  <td>{interestLabel(d, a.variant_key)}</td>
+                  <td className="text-sm text-muted">{(chosen.get(a.student_id) ?? []).map((i) => interestLabel(d, i)).join(", ") || "—"}</td>
+                  <td>
+                    {interestLabel(d, a.variant_key)}
+                    {chosen.get(a.student_id)?.length && !chosen.get(a.student_id)!.includes(a.variant_key) ? <span className="text-warn" title={d.teacher.noMatchingVariant}> ⚠</span> : null}
+                  </td>
                   <td>{statusLabel[a.status]}</td>
                   <td>
                     <form action={setModeAction} className="flex gap-1">

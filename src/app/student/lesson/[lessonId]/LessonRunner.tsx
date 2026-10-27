@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
-import { LifeBuoy, CloudOff, Check, Loader2, Send, Timer, Target, Sparkles, AlertTriangle } from "lucide-react";
+import { LifeBuoy, CloudOff, Check, CheckCircle2, Loader2, Send, Timer, Target, Sparkles, AlertTriangle } from "lucide-react";
 import { useLang } from "@/lib/i18n/client";
 import { fmt, pick } from "@/lib/i18n";
 import { TaskInput, type PublicTask } from "@/components/student/TaskInput";
@@ -40,6 +40,8 @@ export function LessonRunner(p: Props) {
   const [help, setHelp] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [justSent, setJustSent] = useState(false);
   const [timer, setTimer] = useState<{ left: number; title: Bi } | null>(null);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const locked = status === "submitted" || status === "graded" || p.lessonStatus !== "published";
@@ -74,8 +76,16 @@ export function LessonRunner(p: Props) {
           setStatus("submitted");
           throw new Error("locked");
         }
-        if (!res.ok) throw new Error(String(res.status));
         const pend = readPending();
+        // A request the server rejects for good (e.g. a task that no longer exists after the
+        // teacher edited the lesson) must not stay in the queue and block submitting forever.
+        if (!res.ok && res.status >= 400 && res.status < 500 && res.status !== 401 && res.status !== 429) {
+          delete pend[taskId];
+          writePending(pend);
+          setSaveState((s) => ({ ...s, [taskId]: "saved" }));
+          return true;
+        }
+        if (!res.ok) throw new Error(String(res.status));
         if (JSON.stringify(pend[taskId]) === JSON.stringify(answer)) {
           delete pend[taskId];
           writePending(pend);
@@ -132,8 +142,15 @@ export function LessonRunner(p: Props) {
     } else setSaveState((s) => ({ ...s, [taskId]: "failed" }));
   }
 
+  // Two-step confirm inside the page: window.confirm is blocked in some phone in-app browsers,
+  // which made the button look dead.
   async function submit() {
-    if (!window.confirm(d.student.submitConfirm)) return;
+    if (!confirming) {
+      setConfirming(true);
+      setSubmitError(null);
+      return;
+    }
+    setConfirming(false);
     setSubmitting(true);
     setSubmitError(null);
     Object.values(timers.current).forEach(clearTimeout);
@@ -145,7 +162,14 @@ export function LessonRunner(p: Props) {
     }
     const res = await fetch("/api/student/submit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ assignmentId: p.assignmentId }) }).catch(() => null);
     setSubmitting(false);
-    if (res?.ok) setStatus("submitted");
+    if (res?.ok) {
+      setStatus("submitted");
+      setJustSent(true);
+      try {
+        localStorage.removeItem(pendingKey);
+      } catch {}
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (res?.status === 409) setSubmitError(d.student.lessonClosed);
     else setSubmitError(d.common.errorNetwork);
   }
 
@@ -210,7 +234,13 @@ export function LessonRunner(p: Props) {
         </div>
       )}
 
-      {(status === "submitted" || status === "graded") && <Notice tone="ok">{d.student.submittedMsg}</Notice>}
+      {(status === "submitted" || status === "graded") && (
+        <div className={`card p-5 text-center border-2 border-leaf-500 ${justSent ? "animate-[pulse_1s_ease-in-out_2]" : ""}`} role="status">
+          <CheckCircle2 className="w-12 h-12 text-leaf-600 mx-auto" />
+          <p className="text-lg font-bold mt-2">{d.student.submittedMsg}</p>
+          <p className="text-sm text-muted mt-1">{d.student.submittedHint}</p>
+        </div>
+      )}
       {locked && !p.released && <Notice>{d.student.feedbackWait}</Notice>}
 
       {p.tasks.map((t, i) => (
@@ -247,7 +277,7 @@ export function LessonRunner(p: Props) {
         </section>
       )}
 
-      {submitError && <Notice tone="error">{submitError}</Notice>}
+      {submitError && locked && <Notice tone="error">{submitError}</Notice>}
 
       {(status === "submitted" || status === "graded" || p.lessonStatus === "completed") && (
         <ReflectionForm assignmentId={p.assignmentId} initial={p.reflection} />
@@ -265,12 +295,20 @@ export function LessonRunner(p: Props) {
 
       {!locked && !p.released && (
         <div className="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-leaf-100 no-print">
+          {submitError && <div className="mx-auto max-w-3xl px-4 pt-3"><Notice tone="error">{submitError}</Notice></div>}
+          {confirming && (
+            <div className="mx-auto max-w-3xl px-4 pt-3 text-sm font-semibold text-center">{d.student.submitConfirm}</div>
+          )}
           <div className="mx-auto max-w-3xl px-4 py-3 flex gap-2">
-            <button className="btn btn-outline flex-1" onClick={() => setHelp((h) => !h)} aria-pressed={help}>
-              <LifeBuoy className="w-5 h-5" /> {help ? d.student.hideHelp : d.student.help}
-            </button>
+            {confirming ? (
+              <button className="btn btn-outline flex-1" onClick={() => setConfirming(false)}>{d.common.cancel}</button>
+            ) : (
+              <button className="btn btn-outline flex-1" onClick={() => setHelp((h) => !h)} aria-pressed={help}>
+                <LifeBuoy className="w-5 h-5" /> {help ? d.student.hideHelp : d.student.help}
+              </button>
+            )}
             <button className="btn btn-primary flex-[1.4]" onClick={submit} disabled={submitting}>
-              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />} {d.student.submitAll}
+              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />} {confirming ? d.student.submitYes : d.student.submitAll}
             </button>
           </div>
         </div>
