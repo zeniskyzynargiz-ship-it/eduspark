@@ -8,6 +8,7 @@ export function buildAssignmentContent(c: LessonContent, interest: string, lesso
     objective: lesson.objective,
     interest: v.interest,
     context: v.context,
+    theory: v.theory ?? null,
     tasks: variantTasks(c, v),
     criteria: c.criteria,
     support: c.support,

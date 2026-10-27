@@ -5,7 +5,8 @@ import { LifeBuoy, CloudOff, Check, CheckCircle2, Loader2, Send, Timer, Target, 
 import { useLang } from "@/lib/i18n/client";
 import { fmt, pick } from "@/lib/i18n";
 import { TaskInput, type PublicTask } from "@/components/student/TaskInput";
-import type { Task, Criterion } from "@/lib/lesson";
+import type { Task, Criterion, Theory } from "@/lib/lesson";
+import { TheoryCard } from "@/components/TheoryCard";
 import { saveReflectionAction } from "../../actions";
 import { Notice } from "@/components/Shared";
 
@@ -22,6 +23,7 @@ type Props = {
   initialStatus: string;
   released: boolean;
   context: Bi;
+  theory: Theory | null;
   criteria: Criterion[];
   support: { vocabulary: { en: string; kk: string }[]; sentence_frames: string[]; explanation: Bi };
   reflectionQuestions: Bi[];
@@ -219,6 +221,8 @@ export function LessonRunner(p: Props) {
           </ul>
         </details>
       </section>
+
+      <TheoryCard theory={p.theory} title={d.student.theory} lang={lang} />
 
       {timer && !locked && (
         <div className={`rounded-xl px-4 py-2.5 text-sm flex items-center gap-2 ${timer.left > 0 ? "bg-leaf-50 text-leaf-800" : "bg-amber-50 text-amber-900"}`} role="timer">

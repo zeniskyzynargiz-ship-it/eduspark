@@ -10,10 +10,12 @@ import { TaskPreview } from "@/components/TaskPreview";
 import { LessonPlanTable, CriteriaTable } from "@/components/LessonTables";
 import type { Dict, Lang } from "@/lib/i18n";
 import { interestLabel } from "@/lib/survey";
+import { TheoryCard } from "@/components/TheoryCard";
+import type { Theory } from "@/lib/lesson";
 
 type T = "plan" | "key" | "grading" | "class" | "student" | "variant" | "summary";
 
-function StudentSheet({ d, lang, topic, objective, context, tasks, criteria, name }: { d: Dict; lang: Lang; topic: string; objective: string; context: { kk: string; en: string }; tasks: Task[]; criteria: Criterion[]; name?: string }) {
+function StudentSheet({ d, lang, topic, objective, context, theory, tasks, criteria, name }: { d: Dict; lang: Lang; topic: string; objective: string; context: { kk: string; en: string }; theory?: Theory | null; tasks: Task[]; criteria: Criterion[]; name?: string }) {
   return (
     <section className="print-page">
       <PrintHeader title={topic} sub={`${d.student.goal}: ${objective}`} d={d} nameLine={!name} />
@@ -22,6 +24,7 @@ function StudentSheet({ d, lang, topic, objective, context, tasks, criteria, nam
       <p className="text-xs mb-3">
         <b>{d.student.criteria}:</b> {criteria.map((c) => pick(c.name, lang)).join(", ")} · {fmt(d.teacher.totalPoints, { n: totalPoints(tasks) })}
       </p>
+      <div className="mb-3"><TheoryCard theory={theory} title={d.student.theory} lang={lang} compact /></div>
       <div className="space-y-3">
         {tasks.map((t, i) => <TaskPreview key={t.id} task={t} index={i + 1} d={d} lang={lang} showKey={false} paper />)}
       </div>
@@ -97,7 +100,7 @@ export default async function PrintLesson({ params, searchParams }: { params: Pr
     const v = c.variants.find((x) => x.interest === sp.interest) ?? c.variants[0];
     return (
       <PrintShell d={d} title={d.print.studentVersion}>
-        <StudentSheet d={d} lang={lang} topic={lesson.topic} objective={lesson.objective} context={v.context} tasks={variantTasks(c, v)} criteria={c.criteria} />
+        <StudentSheet d={d} lang={lang} topic={lesson.topic} objective={lesson.objective} context={v.context} theory={v.theory} tasks={variantTasks(c, v)} criteria={c.criteria} />
       </PrintShell>
     );
   }
@@ -110,8 +113,8 @@ export default async function PrintLesson({ params, searchParams }: { params: Pr
     return (
       <PrintShell d={d} title={type === "student" ? d.teacher.exportStudent : d.teacher.exportClass}>
         {list.map((a) => {
-          const ac = a.content as unknown as { context: { kk: string; en: string }; tasks: Task[]; criteria: Criterion[] };
-          return <StudentSheet key={a.id} d={d} lang={lang} topic={lesson.topic} objective={lesson.objective} context={ac.context} tasks={ac.tasks} criteria={ac.criteria} name={`${a.students?.first_name ?? ""} ${a.students?.last_name ?? ""}`} />;
+          const ac = a.content as unknown as { context: { kk: string; en: string }; theory?: Theory | null; tasks: Task[]; criteria: Criterion[] };
+          return <StudentSheet key={a.id} d={d} lang={lang} topic={lesson.topic} objective={lesson.objective} context={ac.context} theory={ac.theory} tasks={ac.tasks} criteria={ac.criteria} name={`${a.students?.first_name ?? ""} ${a.students?.last_name ?? ""}`} />;
         })}
       </PrintShell>
     );

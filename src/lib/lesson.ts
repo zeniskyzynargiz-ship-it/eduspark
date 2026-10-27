@@ -64,9 +64,17 @@ export const StageSchema = z.object({
 });
 export type Stage = z.infer<typeof StageSchema>;
 
+/** Short theory for one interest: the lesson's rule or idea explained with examples from that interest. */
+export const TheorySchema = z.object({
+  explanation: z.object({ kk: z.string(), en: z.string() }),
+  examples: z.array(z.string()).default([]),
+});
+export type Theory = z.infer<typeof TheorySchema>;
+
 export const VariantSchema = z.object({
   interest: z.string().refine(isInterestKey, "Unknown interest"),
   context: Bi,
+  theory: TheorySchema.optional(),
   tasks: z.array(TaskSchema).min(1).max(8),
 });
 export type Variant = z.infer<typeof VariantSchema>;

@@ -32,7 +32,12 @@ export function LessonEditor({ lessonId, content }: { lessonId: string; content:
   const { d } = useLang();
   labels = { del: d.common.delete, confirm: d.teacher.deleteConfirm, add: d.teacher.addItem };
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<J>(content);
+  // Older lessons have no theory yet: add empty fields so the teacher can write one.
+  const withTheory = (c: LessonContent): LessonContent => ({
+    ...c,
+    variants: c.variants.map((v) => ({ ...v, theory: v.theory ?? { explanation: { kk: "", en: "" }, examples: [""] } })),
+  });
+  const [draft, setDraft] = useState<J>(() => withTheory(content));
   const [state, action, pending] = useActionState(saveLessonContentAction, null);
 
   if (!open)
@@ -58,7 +63,7 @@ export function LessonEditor({ lessonId, content }: { lessonId: string; content:
       </div>
       <div className="flex gap-2 sticky bottom-0 bg-white pt-2">
         <button className="btn btn-primary" disabled={pending}><Save className="w-4 h-4" /> {pending ? d.common.saving : d.common.save}</button>
-        <button type="button" className="btn btn-ghost" onClick={() => { setDraft(content); setOpen(false); }}>{d.common.cancel}</button>
+        <button type="button" className="btn btn-ghost" onClick={() => { setDraft(withTheory(content)); setOpen(false); }}>{d.common.cancel}</button>
       </div>
     </form>
   );
@@ -72,7 +77,7 @@ function label(k: string) {
 
 function Field({ value, onChange, path, name }: { value: J; onChange: (v: J) => void; path: string; name?: string }) {
   if (typeof value === "string") {
-    const long = value.length > 60 || /prompt|text|activity|explanation|context|sample/.test(path);
+    const long = value.length > 60 || /prompt|text|activity|explanation|context|sample|examples/.test(path);
     return long ? (
       <textarea className="input text-sm" rows={Math.min(6, Math.ceil(value.length / 70) + 1)} value={value} onChange={(e) => onChange(e.target.value)} aria-label={name ?? path} />
     ) : (

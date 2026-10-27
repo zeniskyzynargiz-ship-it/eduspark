@@ -57,3 +57,17 @@ test("every student gets a variant from their own interests", async () => {
   assert.equal(pickVariant(["travel", "games"], ["sport", "travel"]), "travel");
   assert.equal(pickVariant(["art"], ["sport", "other"]), "other");
 });
+
+test("every variant carries a short theory before the tasks", async () => {
+  const { demoLesson } = await import("../src/lib/ai/demo");
+  const { buildProfile } = await import("../src/lib/profile");
+  const { LessonContentSchema } = await import("../src/lib/lesson");
+  const { buildAssignmentContent } = await import("../src/lib/assignment");
+  const c = demoLesson({ topic: "Travel", objective: "Past Simple", duration: 45, gradeLevel: "7", sourceMaterial: "", requirements: "" } as never, buildProfile([], new Map(), new Map()), ["travel", "+Кино"]);
+  assert.ok(LessonContentSchema.safeParse(c).success);
+  for (const v of c.variants) assert.ok(v.theory && v.theory.explanation.kk && v.theory.examples.length);
+  assert.ok(buildAssignmentContent(c, "travel", { topic: "t", objective: "o" }).theory);
+  const n = normalizeRaw({ variants: [{ interest: "music", context: "x", theory: { explanation: "Past Simple: add -ed", examples: ["I played the guitar.", { en: "She sang." }] }, tasks: [{ id: "t1", type: "short", instruction: "a", points: 2, criterion_id: "c1" }] }] }) as { variants: { theory: { explanation: { kk: string }; examples: string[] } }[] };
+  assert.equal(n.variants[0].theory.explanation.kk, "Past Simple: add -ed");
+  assert.deepEqual(n.variants[0].theory.examples, ["I played the guitar.", "She sang."]);
+});

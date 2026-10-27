@@ -16,6 +16,7 @@ import { RegenPanel } from "@/components/teacher/RegenPanel";
 import { PublishButton } from "@/components/teacher/PublishButton";
 import { setLessonStatusAction, stageControlAction, setModeAction, rematchVariantsAction, restoreVersionAction, deleteLessonAction, duplicateLessonAction } from "@/app/teacher/actions";
 import { interestLabel } from "@/lib/survey";
+import { TheoryCard } from "@/components/TheoryCard";
 
 const IMG: Record<string, string> = {
   sport: "/images/interest-sport-ball.webp",
@@ -233,6 +234,7 @@ export default async function LessonPage({ params, searchParams }: { params: Pro
                     <h3 className="font-bold">{interestLabel(d, v.interest)} <span className="font-normal text-sm text-muted">— {pick(v.context, lang)}</span></h3>
                     <span className="ml-auto text-sm text-muted">{fmt(d.teacher.totalPoints, { n: totalPoints(variantTasks(c, v)) })}</span>
                   </div>
+                  <div className="mb-2"><TheoryCard theory={v.theory} title={d.student.theory} lang={lang} compact /></div>
                   <div className="grid gap-2">{v.tasks.map((t, i) => <TaskPreview key={t.id} task={t} index={i + 1} d={d} lang={lang} showKey />)}</div>
                 </div>
               ))}

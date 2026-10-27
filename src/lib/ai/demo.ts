@@ -85,6 +85,13 @@ function variant(interest: string): Variant {
   return {
     interest,
     context: custom ? T(`${label}: мәтіндерді осы тақырыпқа өзгертіңіз`, `${label}: adapt the texts to this topic`) : T(c.kk, c.en),
+    theory: {
+      explanation: T(
+        `${custom ? label : c.kk.split(":")[0]} мысалдарына қара. Әдеттегі, қайталанатын әрекетті Present Simple-мен айтамыз (every day, on Tuesdays): he/she/it-тен кейін етістікке -s жалғанады. Өткен оқиғаны Past Simple-мен айтамыз (last week, yesterday): етістікке -ed жалғанады немесе бұрыс етістік қолданылады. Мұғалім бұл түсіндірмені сабақ тақырыбына сай өзгерте алады.`,
+        `Look at the ${custom ? label : c.en.split(":")[0].toLowerCase()} examples. We use Present Simple for habits and things that repeat (every day, on Tuesdays): add -s to the verb after he/she/it. We use Past Simple for finished events (last week, yesterday): add -ed or use the irregular form. The teacher can change this explanation to fit the lesson topic.`,
+      ),
+      examples: c.text.split(/(?<=\.)\s+/).slice(0, 3),
+    },
     tasks: [
       { id: "t1", type: "choice", criterion_id: "c1", points: 2, prompt: `${c.text}\n\n${c.q}`, instruction: T("Мәтінді оқып, дұрыс жауапты таңда.", "Read the text and choose the correct answer."), options: c.options, correct: [0], hint: T("Мәтіннің соңғы сөйлемін қайта оқы.", "Read the last sentence again.") },
       { id: "t2", type: "match", criterion_id: "c2", points: 2, prompt: "", instruction: T("Сөзді мағынасымен сәйкестендір.", "Match each word with its meaning."), pairs: c.match.map(([left, right]) => ({ left, right })) },

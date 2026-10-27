@@ -16,12 +16,13 @@ Return ONE JSON object, no prose, exactly in this shape (Bi = {"kk": "...Kazakh.
   "addie_rationale": {"analyze": Bi, "design": Bi, "develop": Bi, "implement": Bi, "evaluate": Bi},
   "stages": [{"title": Bi, "minutes": int, "teacher_activity": Bi, "student_activity": Bi, "resources": "string", "evidence": Bi}],
   "criteria": [{"id": "c1", "name": Bi, "descriptors": [{"text": Bi, "points": int}]}],
-  "variants": [{"interest": "one key from the listed interests, copied exactly (a key that starts with + is a teacher-added interest)", "context": Bi, "tasks": [Task, ...]}],
+  "variants": [{"interest": "one key from the listed interests, copied exactly (a key that starts with + is a teacher-added interest)", "context": Bi, "theory": Theory, "tasks": [Task, ...]}],
   "common_tasks": [Task, ...],
   "support": {"vocabulary": [{"en": "word", "kk": "сөз"}], "sentence_frames": ["I think ... because ..."], "explanation": Bi},
   "reflection_questions": [Bi, ...],
   "homework": Bi
 }
+Theory = {"explanation": Bi, "examples": ["English example sentence", ...]}: a short explanation (3-5 sentences) of the lesson's key rule or idea, told through this interest, with 3-4 example sentences from this interest.
 Task is one of (every task also has "id" (unique, short), "instruction": Bi, "prompt": "English text", "points": int, "criterion_id": "c1", optional "hint": Bi):
   {"type": "choice", "options": ["..."], "correct": [index, ...]}
   {"type": "match", "pairs": [{"left": "...", "right": "..."}]}
@@ -113,7 +114,8 @@ export function variantSystemPrompt() {
 Follow the task_plan exactly: same number of tasks, same order, same id, type, criterion_id and points. Only the context (texts, examples, names of things) follows the student's interest.
 English is the subject: prompts, texts and options are in English. Instructions and hints are in BOTH Kazakh and English. Never invent names of real students.
 Return ONE JSON object, no prose (Bi = {"kk": "...", "en": "..."}):
-{"context": Bi, "tasks": [Task, ...]}
+{"context": Bi, "theory": {"explanation": Bi, "examples": ["English example sentence", ...]}, "tasks": [Task, ...]}
+"theory" explains the lesson's key rule or idea (the same rule for every variant) in 3-5 simple sentences, using this interest for the explanation, plus 3-4 English example sentences from this interest. It comes before the tasks, so students can learn first and then practise.
 Task (each also has "id", "instruction": Bi, "prompt": "English text", "points": int, "criterion_id", optional "hint": Bi):
   {"type": "choice", "options": ["..."], "correct": [index, ...]}
   {"type": "match", "pairs": [{"left": "...", "right": "..."}]}   (3-5 pairs)

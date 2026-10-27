@@ -68,7 +68,7 @@ export async function generateLesson(input: LessonInput, profile: ClassProfile, 
             .then((j) => {
               const v = j as { context?: unknown; tasks: Record<string, unknown>[] };
               // The task plan decides ids, criteria and points, so every variant is assessed the same way.
-              return { interest, context: v.context, tasks: v.tasks.map((t, i) => ({ ...t, id: slots[i].id, criterion_id: slots[i].criterion_id, points: slots[i].points, type: t.type ?? slots[i].type })) };
+              return { interest, context: v.context, theory: (v as { theory?: unknown }).theory, tasks: v.tasks.map((t, i) => ({ ...t, id: slots[i].id, criterion_id: slots[i].criterion_id, points: slots[i].points, type: t.type ?? slots[i].type })) };
             })
             .catch(() => null),
         ),

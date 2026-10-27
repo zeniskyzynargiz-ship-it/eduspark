@@ -1,3 +1,4 @@
+import type { Theory } from "@/lib/lesson";
 import { notFound } from "next/navigation";
 import { getDict } from "@/lib/i18n/server";
 import { requireStudent, ensureAssignment } from "@/lib/student-data";
@@ -48,6 +49,7 @@ export default async function StudentLessonPage({ params }: { params: Promise<{ 
         initialStatus={a.status}
         released={released}
         context={a.content.context}
+        theory={(a.content as { theory?: Theory | null }).theory ?? null}
         criteria={a.content.criteria}
         support={a.content.support}
         reflectionQuestions={a.content.reflection_questions}

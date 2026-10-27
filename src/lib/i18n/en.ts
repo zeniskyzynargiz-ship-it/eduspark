@@ -246,7 +246,7 @@ export const en: typeof kk = {
     goal: "Goal", criteria: "Assessment criteria", myTasks: "My tasks", task: "Task {n}",
     help: "Help", hideHelp: "Hide help", wordList: "Word list", frames: "Sentence frames", hint: "Hint",
     autosaved: "Saved automatically", saving: "Saving…", saveFailed: "Not saved", notSaved: "Some answers are not saved",
-    resend: "Send again", submitAll: "Submit work", submitConfirm: "Submit your work? Your teacher will check it.",
+    resend: "Send again", theory: "Explanation: read this first", submitAll: "Submit work", submitConfirm: "Submit your work? Your teacher will check it.",
     submittedMsg: "Your work has been submitted. Thank you!", submitYes: "Yes, send it", submittedHint: "Your teacher can see your work and will check it. Your grade will appear on this page.", lessonClosed: "The teacher has closed this lesson, so the work cannot be sent. Tell your teacher.", pickAnswer: "Choose the answer", multi: "There may be more than one correct answer",
     tapLeft: "Tap a word on the left, then tap its meaning on the right.", yourAnswer: "Your answer", typeHere: "Type here…",
     record: "Start recording", stop: "Stop", recordAgain: "Record again", recorded: "Recording saved", micDenied: "No microphone permission. Say your answer to your teacher.",
