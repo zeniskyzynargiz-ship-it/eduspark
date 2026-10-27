@@ -66,7 +66,12 @@ export function normalizeRaw(raw: unknown): unknown {
   let x = stringsToBi(raw) as J;
   x = fillBi(x) as J;
   if (Array.isArray(x.stages))
-    x.stages = (x.stages as J[]).map((s) => ({ resources: "", ...s, minutes: Math.max(1, Math.round(Number(s?.minutes) || 1)) }));
+    x.stages = (x.stages as J[]).map((s) => {
+      // "resources" is plain text; the AI sometimes sends {kk, en} or a list.
+      const r = s?.resources;
+      const resources = typeof r === "string" ? r : Array.isArray(r) ? r.map(String).join(", ") : isObj(r) ? String(r.en ?? r.kk ?? "") : "";
+      return { ...s, resources, minutes: Math.max(1, Math.round(Number(s?.minutes) || 1)) };
+    });
   if (Array.isArray(x.criteria))
     x.criteria = (x.criteria as J[]).map((c, i) => ({
       ...c,
