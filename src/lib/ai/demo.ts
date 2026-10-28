@@ -7,11 +7,11 @@ import type { ClassProfile } from "../profile";
  * It is always saved with is_demo = true and shown with a "Demo" label.
  * Contexts are fixed sample texts; they are not written for the teacher's topic.
  */
-type Ctx = { kk: string; en: string; text: string; q: string; options: string[]; match: [string, string][]; gap: string; gapAns: string[][]; write: string };
+type Ctx = { emoji: string; kk: string; en: string; text: string; q: string; options: string[]; match: [string, string][]; gap: string; gapAns: string[][]; write: string };
 
 const CTX: Record<Interest, Ctx> = {
   sport: {
-    kk: "Спорт: команда, жарыс, жаттығу", en: "Sport: teams, matches, training",
+    emoji: "⚽🏃", kk: "Спорт: команда, жарыс, жаттығу", en: "Sport: teams, matches, training",
     text: "Arman is in the school football team. They train on Tuesdays and Thursdays. Last week they lost a match, but the coach said they played as a real team.",
     q: "Why was the coach happy?", options: ["They played as a team", "They won the match", "They trained every day", "Arman scored three goals"],
     match: [["coach", "a person who trains a team"], ["match", "a game between two teams"], ["train", "practise a sport"], ["score", "get a goal or a point"]],
@@ -19,7 +19,7 @@ const CTX: Record<Interest, Ctx> = {
     write: "Write 2–3 sentences about a sport you like or want to try. Say why.",
   },
   music: {
-    kk: "Музыка: ән, аспап, концерт", en: "Music: songs, instruments, concerts",
+    emoji: "🎵🎻", kk: "Музыка: ән, аспап, концерт", en: "Music: songs, instruments, concerts",
     text: "Aliya plays the dombyra. Every evening she practises for thirty minutes. Next month she will play at the school concert with her friends.",
     q: "What will Aliya do next month?", options: ["Play at the school concert", "Buy a new dombyra", "Stop practising", "Write a book"],
     match: [["instrument", "a thing you play music on"], ["concert", "a music show for people"], ["practise", "do something again to get better"], ["band", "a group of musicians"]],
@@ -27,7 +27,7 @@ const CTX: Record<Interest, Ctx> = {
     write: "Write 2–3 sentences about a song or a musician you like. Say why.",
   },
   travel: {
-    kk: "Саяхат: қалалар, көлік, жаңа орындар", en: "Travel: cities, transport, new places",
+    emoji: "✈️🗺️", kk: "Саяхат: қалалар, көлік, жаңа орындар", en: "Travel: cities, transport, new places",
     text: "Last summer Dias travelled to Turkistan with his family. They went by train. He liked the old buildings and tried new food at the market.",
     q: "How did Dias travel to Turkistan?", options: ["By train", "By plane", "By bus", "By car"],
     match: [["journey", "a trip from one place to another"], ["market", "a place where people buy and sell things"], ["ticket", "a paper you need to travel"], ["map", "a picture that shows places"]],
@@ -35,7 +35,7 @@ const CTX: Record<Interest, Ctx> = {
     write: "Write 2–3 sentences about a place you want to visit. Say why.",
   },
   technology: {
-    kk: "Технология: роботтар, қосымшалар, ойлап табу", en: "Technology: robots, apps, inventions",
+    emoji: "🤖💡", kk: "Технология: роботтар, қосымшалар, ойлап табу", en: "Technology: robots, apps, inventions",
     text: "Madina's class made a small robot for a science fair. The robot can follow a black line on the floor. Next, they want to teach it to avoid walls.",
     q: "What can the robot do now?", options: ["Follow a black line", "Avoid walls", "Speak English", "Clean the classroom"],
     match: [["robot", "a machine that can move and work"], ["app", "a program on a phone"], ["invent", "make something new for the first time"], ["screen", "the part of a device that shows pictures"]],
@@ -43,7 +43,7 @@ const CTX: Record<Interest, Ctx> = {
     write: "Write 2–3 sentences about a gadget or app you use. Say how it helps you.",
   },
   games: {
-    kk: "Ойындар: ережелер, команда, стратегия", en: "Games: rules, teams, strategy",
+    emoji: "♟️🎮", kk: "Ойындар: ережелер, команда, стратегия", en: "Games: rules, teams, strategy",
     text: "Timur likes board games. On Fridays he plays chess with his grandfather. His grandfather says chess teaches you to think before you move.",
     q: "What does chess teach, according to the grandfather?", options: ["To think before you move", "To play fast", "To win every game", "To play alone"],
     match: [["rule", "what you must or must not do in a game"], ["player", "a person who plays"], ["win", "be the best in a game"], ["turn", "your time to play"]],
@@ -51,7 +51,7 @@ const CTX: Record<Interest, Ctx> = {
     write: "Write 2–3 sentences about your favourite game. Explain one rule.",
   },
   animals: {
-    kk: "Жануарлар: үй жануарлары, табиғат, күтім", en: "Animals: pets, nature, care",
+    emoji: "🐶🐾", kk: "Жануарлар: үй жануарлары, табиғат, күтім", en: "Animals: pets, nature, care",
     text: "Aru has a dog called Bars. She walks him every morning before school. Last week Bars was ill, so Aru took him to the vet.",
     q: "Why did Aru take Bars to the vet?", options: ["He was ill", "He was hungry", "It was his birthday", "He was lost"],
     match: [["vet", "an animal doctor"], ["pet", "an animal that lives with people"], ["feed", "give food to"], ["wild", "living free in nature"]],
@@ -59,7 +59,7 @@ const CTX: Record<Interest, Ctx> = {
     write: "Write 2–3 sentences about an animal you like. Say why.",
   },
   art: {
-    kk: "Өнер: сурет, түс, шығармашылық", en: "Art: drawing, colours, creativity",
+    emoji: "🎨✏️", kk: "Өнер: сурет, түс, шығармашылық", en: "Art: drawing, colours, creativity",
     text: "Erlan draws comics in his notebook. His characters are superheroes from Almaty. He wants to show his comics at the school art exhibition.",
     q: "Where are Erlan's superheroes from?", options: ["Almaty", "London", "Astana", "Space"],
     match: [["draw", "make a picture with a pencil"], ["exhibition", "a show of art for people"], ["character", "a person in a story"], ["colour", "red, blue or green, for example"]],
@@ -67,7 +67,7 @@ const CTX: Record<Interest, Ctx> = {
     write: "Write 2–3 sentences about a picture, film or comic you like. Describe it.",
   },
   other: {
-    kk: "Күнделікті өмір: мектеп, достар, демалыс", en: "Everyday life: school, friends, free time",
+    emoji: "🏫👫", kk: "Күнделікті өмір: мектеп, достар, демалыс", en: "Everyday life: school, friends, free time",
     text: "Saule and her friends meet after school on Wednesdays. They do homework together and then go for a walk in the park.",
     q: "What do the friends do first?", options: ["They do homework", "They go to the park", "They watch a film", "They play football"],
     match: [["homework", "school work you do at home"], ["park", "a green place in a city"], ["meet", "come together"], ["free time", "time when you are not busy"]],
@@ -77,6 +77,29 @@ const CTX: Record<Interest, Ctx> = {
 };
 
 const T = (kk: string, en: string) => ({ kk, en });
+
+const TIME_WORDS = ["every evening", "every morning", "every day", "on Tuesdays", "on Fridays", "on Wednesdays", "last summer", "last week", "next month", "next"];
+
+/** Template steps: each gap sentence filled in, with the verb and the time word highlighted. */
+function demoSteps(c: Ctx) {
+  const sentences = c.gap.split(/(?<=\.)\s+/);
+  return sentences.slice(0, c.gapAns.length).map((raw, i) => {
+    const verb = c.gapAns[i][0];
+    const example = raw.replace(/_{3,}\s*\([^)]*\)/, verb);
+    const time = TIME_WORDS.find((w) => example.toLowerCase().includes(w.toLowerCase()));
+    const timeExact = time ? example.slice(example.toLowerCase().indexOf(time.toLowerCase()), example.toLowerCase().indexOf(time.toLowerCase()) + time.length) : "";
+    return {
+      note: T(
+        `${i + 1}-қадам. Ерекшеленген етістікке қара: «${verb}». ${timeExact ? `«${timeExact}» деген уақыт сөзі қай шақ керек екенін көрсетеді.` : "Сөйлемнің мағынасы қай шақ керек екенін көрсетеді."}`,
+        `Step ${i + 1}. Look at the highlighted verb: "${verb}". ${timeExact ? `The time words "${timeExact}" show which tense we need.` : "The meaning of the sentence shows which tense we need."}`,
+      ),
+      example,
+      translation: "",
+      emoji: c.emoji,
+      highlight: [verb, timeExact].filter((h) => h && example.includes(h)),
+    };
+  });
+}
 
 function variant(interest: string): Variant {
   const custom = !(interest in CTX);
@@ -90,6 +113,7 @@ function variant(interest: string): Variant {
         `${custom ? label : c.kk.split(":")[0]} мысалдарына қара. Әдеттегі, қайталанатын әрекетті Present Simple-мен айтамыз (every day, on Tuesdays): he/she/it-тен кейін етістікке -s жалғанады. Өткен оқиғаны Past Simple-мен айтамыз (last week, yesterday): етістікке -ed жалғанады немесе бұрыс етістік қолданылады. Мұғалім бұл түсіндірмені сабақ тақырыбына сай өзгерте алады.`,
         `Look at the ${custom ? label : c.en.split(":")[0].toLowerCase()} examples. We use Present Simple for habits and things that repeat (every day, on Tuesdays): add -s to the verb after he/she/it. We use Past Simple for finished events (last week, yesterday): add -ed or use the irregular form. The teacher can change this explanation to fit the lesson topic.`,
       ),
+      steps: demoSteps(c),
       examples: c.text.split(/(?<=\.)\s+/).slice(0, 3),
     },
     tasks: [

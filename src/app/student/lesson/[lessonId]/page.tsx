@@ -50,6 +50,7 @@ export default async function StudentLessonPage({ params }: { params: Promise<{ 
         released={released}
         context={a.content.context}
         theory={(a.content as { theory?: Theory | null }).theory ?? null}
+        interest={a.variant_key}
         criteria={a.content.criteria}
         support={a.content.support}
         reflectionQuestions={a.content.reflection_questions}

@@ -112,7 +112,21 @@ export function normalizeRaw(raw: unknown): unknown {
         const tasks = Array.isArray(v?.tasks) ? (v.tasks as unknown[]).map(cleanTask).filter(Boolean).slice(0, 8) : [];
         const th = v?.theory;
         const theory = isObj(th) && isObj(th.explanation)
-          ? { explanation: { kk: String(th.explanation.kk ?? ""), en: String(th.explanation.en ?? "") }, examples: (Array.isArray(th.examples) ? th.examples : []).map((e) => (isObj(e) ? String(e.en ?? e.kk ?? "") : String(e))).filter(Boolean).slice(0, 6) }
+          ? {
+              explanation: { kk: String(th.explanation.kk ?? ""), en: String(th.explanation.en ?? "") },
+              steps: (Array.isArray(th.steps) ? th.steps : []).filter(isObj).slice(0, 6).map((st) => {
+                const note = isObj(st.note) ? st.note : { kk: String(st.note ?? ""), en: String(st.note ?? "") };
+                const example = String(st.example ?? "");
+                return {
+                  note: { kk: String(note.kk ?? note.en ?? ""), en: String(note.en ?? note.kk ?? "") },
+                  example,
+                  translation: String(st.translation ?? ""),
+                  // Only parts that really occur in the example can be highlighted.
+                  highlight: (Array.isArray(st.highlight) ? st.highlight : []).map(String).filter((h) => h && example.includes(h)).slice(0, 4),
+                  emoji: String(st.emoji ?? "").slice(0, 16),
+                };
+              }),
+              examples: (Array.isArray(th.examples) ? th.examples : []).map((e) => (isObj(e) ? String(e.en ?? e.kk ?? "") : String(e))).filter(Boolean).slice(0, 6) }
           : undefined;
         return { ...v, interest, tasks, theory };
       })

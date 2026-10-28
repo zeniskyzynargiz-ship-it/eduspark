@@ -65,8 +65,20 @@ export const StageSchema = z.object({
 export type Stage = z.infer<typeof StageSchema>;
 
 /** Short theory for one interest: the lesson's rule or idea explained with examples from that interest. */
+const LooseBi = z.object({ kk: z.string(), en: z.string() });
+/** One step of the explanation: a rule in simple words, an example from the interest, and the part to highlight. */
+export const TheoryStepSchema = z.object({
+  note: LooseBi,
+  example: z.string().default(""),
+  translation: z.string().default(""),
+  highlight: z.array(z.string()).default([]),
+  /** 1-3 emoji that picture the example (e.g. "⚽🏃"). */
+  emoji: z.string().default(""),
+});
+export type TheoryStep = z.infer<typeof TheoryStepSchema>;
 export const TheorySchema = z.object({
-  explanation: z.object({ kk: z.string(), en: z.string() }),
+  explanation: LooseBi,
+  steps: z.array(TheoryStepSchema).default([]),
   examples: z.array(z.string()).default([]),
 });
 export type Theory = z.infer<typeof TheorySchema>;

@@ -7,6 +7,7 @@ import { fmt, pick } from "@/lib/i18n";
 import { TaskInput, type PublicTask } from "@/components/student/TaskInput";
 import type { Task, Criterion, Theory } from "@/lib/lesson";
 import { TheoryCard } from "@/components/TheoryCard";
+import { ExplainChat } from "@/components/student/ExplainChat";
 import { saveReflectionAction } from "../../actions";
 import { Notice } from "@/components/Shared";
 
@@ -24,6 +25,7 @@ type Props = {
   released: boolean;
   context: Bi;
   theory: Theory | null;
+  interest: string;
   criteria: Criterion[];
   support: { vocabulary: { en: string; kk: string }[]; sentence_frames: string[]; explanation: Bi };
   reflectionQuestions: Bi[];
@@ -44,6 +46,9 @@ export function LessonRunner(p: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [justSent, setJustSent] = useState(false);
+  const hasTheory = !!p.theory && (!!p.theory.explanation.kk.trim() || !!p.theory.explanation.en.trim() || (p.theory.steps ?? []).length > 0);
+  // The explanation is its own step before the tasks; students can switch back any time.
+  const [view, setView] = useState<"learn" | "tasks">(hasTheory && (p.initialStatus === "assigned" || p.initialStatus === "in_progress") && !p.released ? "learn" : "tasks");
   const [timer, setTimer] = useState<{ left: number; title: Bi } | null>(null);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const locked = status === "submitted" || status === "graded" || p.lessonStatus !== "published";
@@ -222,7 +227,22 @@ export function LessonRunner(p: Props) {
         </details>
       </section>
 
-      <TheoryCard theory={p.theory} title={d.student.theory} lang={lang} />
+      {hasTheory && (
+        <div className="grid grid-cols-2 gap-2 sticky top-14 z-20 bg-cream/95 backdrop-blur py-2 -mx-1 px-1" role="tablist">
+          <button role="tab" aria-selected={view === "learn"} onClick={() => setView("learn")} className={`rounded-xl px-3 py-2.5 font-semibold border ${view === "learn" ? "bg-amber-500 text-white border-amber-500" : "bg-white border-amber-200"}`}>📘 1. {d.student.learnTab}</button>
+          <button role="tab" aria-selected={view === "tasks"} onClick={() => setView("tasks")} className={`rounded-xl px-3 py-2.5 font-semibold border ${view === "tasks" ? "bg-leaf-700 text-white border-leaf-700" : "bg-white border-leaf-200"}`}>✏️ 2. {d.student.tasksTab}</button>
+        </div>
+      )}
+
+      {hasTheory && view === "learn" && (
+        <>
+          <TheoryCard theory={p.theory} title={d.student.theory} lang={lang} interest={p.interest} />
+          <ExplainChat assignmentId={p.assignmentId} />
+          <button className="btn btn-primary w-full" onClick={() => { setView("tasks"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+            {d.student.goToTasks} →
+          </button>
+        </>
+      )}
 
       {timer && !locked && (
         <div className={`rounded-xl px-4 py-2.5 text-sm flex items-center gap-2 ${timer.left > 0 ? "bg-leaf-50 text-leaf-800" : "bg-amber-50 text-amber-900"}`} role="timer">
@@ -247,7 +267,11 @@ export function LessonRunner(p: Props) {
       )}
       {locked && !p.released && <Notice>{d.student.feedbackWait}</Notice>}
 
-      {p.tasks.map((t, i) => (
+      {view === "tasks" && hasTheory && !locked && (
+        <button className="btn btn-ghost btn-sm" onClick={() => setView("learn")}>🤔 {d.student.askExplain}</button>
+      )}
+
+      {view === "tasks" && p.tasks.map((t, i) => (
         <section key={t.id} className="card p-5">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase text-leaf-700">{fmt(d.student.task, { n: i + 1 })} · {t.points} {d.common.points}</span>
@@ -262,7 +286,7 @@ export function LessonRunner(p: Props) {
         </section>
       ))}
 
-      {help && !p.released && (
+      {view === "tasks" && help && !p.released && (
         <section className="card p-5 space-y-3" aria-live="polite">
           <h2 className="font-bold flex items-center gap-2"><LifeBuoy className="w-5 h-5 text-leaf-700" /> {d.student.help}</h2>
           {p.support.vocabulary.length > 0 && (

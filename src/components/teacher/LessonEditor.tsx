@@ -35,7 +35,12 @@ export function LessonEditor({ lessonId, content }: { lessonId: string; content:
   // Older lessons have no theory yet: add empty fields so the teacher can write one.
   const withTheory = (c: LessonContent): LessonContent => ({
     ...c,
-    variants: c.variants.map((v) => ({ ...v, theory: v.theory ?? { explanation: { kk: "", en: "" }, examples: [""] } })),
+    variants: c.variants.map((v) => ({
+      ...v,
+      theory: v.theory
+        ? { ...v.theory, steps: v.theory.steps?.length ? v.theory.steps : [{ note: { kk: "", en: "" }, example: "", translation: "", highlight: [""], emoji: "" }] }
+        : { explanation: { kk: "", en: "" }, steps: [{ note: { kk: "", en: "" }, example: "", translation: "", highlight: [""], emoji: "" }], examples: [""] },
+    })),
   });
   const [draft, setDraft] = useState<J>(() => withTheory(content));
   const [state, action, pending] = useActionState(saveLessonContentAction, null);

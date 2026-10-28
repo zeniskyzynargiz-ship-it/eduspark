@@ -47,6 +47,12 @@ export default async function LessonPage({ params, searchParams }: { params: Pro
   const { data: surveys } = sids.length
     ? await sb.from("survey_responses").select("student_id, interests, version").in("student_id", sids).order("version", { ascending: false })
     : { data: [] as { student_id: string; interests: string[]; version: number }[] };
+  const aids = ((assignments ?? []) as unknown as { id: string }[]).map((a) => a.id);
+  const { data: questions } = aids.length
+    ? await sb.from("explain_questions").select("id, student_id, question, answer, created_at").in("assignment_id", aids).order("created_at", { ascending: false }).limit(50)
+    : { data: [] as { id: string; student_id: string; question: string; answer: string; created_at: string }[] };
+  const names = new Map<string, string>();
+  for (const a of (assignments ?? []) as unknown as { student_id: string; students: { first_name: string; last_name: string } | null }[]) names.set(a.student_id, `${a.students?.first_name ?? ""} ${a.students?.last_name ?? ""}`.trim());
   const chosen = new Map<string, string[]>();
   for (const s of surveys ?? []) if (!chosen.has(s.student_id)) chosen.set(s.student_id, s.interests);
   const statusLabel: Record<string, string> = { assigned: d.teacher.notStarted, in_progress: d.teacher.inProgress, submitted: d.teacher.submitted, graded: d.teacher.graded };
@@ -196,6 +202,25 @@ export default async function LessonPage({ params, searchParams }: { params: Pro
               ))}
             </tbody>
           </table>
+        </section>
+      )}
+
+      {(questions?.length ?? 0) > 0 && (
+        <section className="card p-5 mb-4">
+          <h2 className="font-bold text-lg">💬 {d.teacher.explainQuestions} ({questions!.length})</h2>
+          <p className="text-xs text-muted mb-3">{d.teacher.explainQuestionsHint}</p>
+          <ul className="space-y-3 max-h-[480px] overflow-y-auto">
+            {questions!.map((q) => (
+              <li key={q.id} className="rounded-xl border border-leaf-100 bg-leaf-50/40 p-3 text-sm">
+                <div className="flex justify-between gap-2 text-xs text-muted mb-1">
+                  <span className="font-semibold">{names.get(q.student_id) || "—"}</span>
+                  <span>{new Date(q.created_at).toLocaleString(lang === "kk" ? "kk-KZ" : "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                </div>
+                <p className="font-medium">❓ {q.question}</p>
+                <p className="mt-1 text-muted whitespace-pre-line">{q.answer}</p>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

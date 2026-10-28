@@ -72,6 +72,21 @@ test("every variant carries a short theory before the tasks", async () => {
   assert.deepEqual(n.variants[0].theory.examples, ["I played the guitar.", "She sang."]);
 });
 
+test("theory steps keep only highlights found in the example", async () => {
+  const { demoLesson } = await import("../src/lib/ai/demo");
+  const { buildProfile } = await import("../src/lib/profile");
+  const c = demoLesson({ topic: "Sport", objective: "Present Simple", duration: 45, gradeLevel: "7", sourceMaterial: "", requirements: "" } as never, buildProfile([], new Map(), new Map()), ["sport"]);
+  const steps = c.variants[0].theory!.steps;
+  assert.ok(steps.length >= 2);
+  assert.ok(steps.every((st) => !st.example.includes("___")));
+  for (const st of steps) for (const h of st.highlight) assert.ok(st.example.includes(h));
+  const n = normalizeRaw({ variants: [{ interest: "sport", context: "x", theory: { explanation: "x", steps: [{ note: "He/She/It + -s", example: "He plays football every day.", highlight: ["plays", "goes"], emoji: "⚽" }] }, tasks: [{ id: "t1", type: "short", instruction: "a", points: 2, criterion_id: "c1" }] }] }) as { variants: { theory: { steps: { note: { kk: string }; highlight: string[]; emoji: string }[] } }[] };
+  const s0 = n.variants[0].theory.steps[0];
+  assert.equal(s0.note.kk, "He/She/It + -s");
+  assert.deepEqual(s0.highlight, ["plays"]);
+  assert.equal(s0.emoji, "⚽");
+});
+
 test("technical ids are removed from readable lesson text", () => {
   const n = normalizeRaw({ stages: [{ title: "Pair work", minutes: 10, teacher_activity: { kk: "Жұптық тапсырманы түсіндіреді (past_trip_pair).", en: "Explains the task (t1, t2, t3)." }, student_activity: "x", evidence: "Answers (whole_class_voice)", resources: "Cards (common_tasks), timer" }] }) as { stages: { teacher_activity: { kk: string; en: string }; evidence: { kk: string }; resources: string }[] };
   assert.equal(n.stages[0].teacher_activity.kk, "Жұптық тапсырманы түсіндіреді.");

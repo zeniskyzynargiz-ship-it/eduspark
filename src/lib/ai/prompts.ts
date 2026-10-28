@@ -22,7 +22,7 @@ Return ONE JSON object, no prose, exactly in this shape (Bi = {"kk": "...Kazakh.
   "reflection_questions": [Bi, ...],
   "homework": Bi
 }
-Theory = {"explanation": Bi, "examples": ["English example sentence", ...]}: a short explanation (3-5 sentences) of the lesson's key rule or idea, told through this interest, with 3-4 example sentences from this interest.
+Theory = {"explanation": Bi, "steps": [{"note": Bi, "example": "English sentence", "translation": "Kazakh translation", "highlight": ["part of the example"]}], "examples": ["English sentence", ...]}: a full explanation of the lesson's key rule told through this interest (see the variant rules).
 Task is one of (every task also has "id" (unique, short), "instruction": Bi, "prompt": "English text", "points": int, "criterion_id": "c1", optional "hint": Bi):
   {"type": "choice", "options": ["..."], "correct": [index, ...]}
   {"type": "match", "pairs": [{"left": "...", "right": "..."}]}
@@ -115,8 +115,11 @@ export function variantSystemPrompt() {
 Follow the task_plan exactly: same number of tasks, same order, same id, type, criterion_id and points. Only the context (texts, examples, names of things) follows the student's interest.
 English is the subject: prompts, texts and options are in English. Instructions and hints are in BOTH Kazakh and English. Never invent names of real students.
 Return ONE JSON object, no prose (Bi = {"kk": "...", "en": "..."}):
-{"context": Bi, "theory": {"explanation": Bi, "examples": ["English example sentence", ...]}, "tasks": [Task, ...]}
-"theory" explains the lesson's key rule or idea (the same rule for every variant) in 3-5 simple sentences, using this interest for the explanation, plus 3-4 English example sentences from this interest. It comes before the tasks, so students can learn first and then practise.
+{"context": Bi, "theory": {"explanation": Bi, "steps": [{"note": Bi, "example": "English sentence", "translation": "Kazakh", "highlight": ["exact part"], "emoji": "⚽🏃"}], "examples": ["English sentence", ...]}, "tasks": [Task, ...]}
+"theory" is a FULL explanation of the lesson's key rule or idea (the same rule for every variant), told through this interest, so a Grade 7 student can learn it before the tasks:
+- "explanation": 2-4 simple sentences that connect the interest to the rule (e.g. "A footballer trains every day and plays matches. These are repeated actions. In English we talk about habits with Present Simple.").
+- "steps": 3-5 steps from simple to harder. Each step has "note" (the rule in very simple words, Kazakh and English), "example" (one English sentence from this interest), "translation" (Kazakh translation of the example) and "highlight" (1-3 exact parts of the example that show the rule, e.g. ["plays"] or ["did", "go"]; each must appear in the example exactly) and "emoji" (1-3 emoji that picture the example, e.g. "⚽🏃").
+- "examples": 3-4 more English sentences from this interest.
 Task (each also has "id", "instruction": Bi, "prompt": "English text", "points": int, "criterion_id", optional "hint": Bi):
   {"type": "choice", "options": ["..."], "correct": [index, ...]}
   {"type": "match", "pairs": [{"left": "...", "right": "..."}]}   (3-5 pairs)
