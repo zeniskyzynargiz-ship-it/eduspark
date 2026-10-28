@@ -312,7 +312,7 @@ export const kk = {
   },
   print: {
     name: "Аты-жөні", date: "Күні", answerSpace: "Жауап", teacherVersion: "Мұғалім нұсқасы", studentVersion: "Оқушы нұсқасы",
-    gradingSheet: "Бағалау парағы", lessonPlan: "Қысқа мерзімді жоспар (ҚМЖ)", printBtn: "Басып шығару / PDF сақтау",
+    gradingSheet: "Бағалау парағы", lessonPlan: "Қысқа мерзімді жоспар (ҚМЖ)", printBtn: "Басып шығару / PDF сақтау", pdfDownload: "PDF жүктеу", pdfHint: "«PDF жүктеу» батырмасын басыңыз: дайын PDF файл телефонға да, компьютерге де жүктеледі.", pdfBusy: "PDF дайындалуда…", printOnly: "Басып шығару", pdfError: "PDF жасалмады. «Басып шығару» батырмасын қолданып көріңіз.",
     printHelp: "PDF алу үшін басып шығару терезесінде «PDF ретінде сақтау» таңдаңыз.", signature: "Мұғалім қолы",
     noKey: "Оқушы нұсқасында жауап кілті жоқ.", matchHelp: "Сызықпен қос", recordHelp: "Мұғалімге ауызша айт",
   },

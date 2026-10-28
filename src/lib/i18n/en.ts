@@ -301,7 +301,7 @@ export const en: typeof kk = {
   },
   print: {
     name: "Name", date: "Date", answerSpace: "Answer", teacherVersion: "Teacher version", studentVersion: "Student version",
-    gradingSheet: "Grading sheet", lessonPlan: "Lesson plan", printBtn: "Print / Save as PDF",
+    gradingSheet: "Grading sheet", lessonPlan: "Lesson plan", printBtn: "Print / Save as PDF", pdfDownload: "Download PDF", pdfHint: "Press “Download PDF”: a ready PDF file is saved on your phone or computer.", pdfBusy: "Making the PDF…", printOnly: "Print", pdfError: "Could not make the PDF. Try the Print button.",
     printHelp: "To get a PDF, choose \"Save as PDF\" in the print window.", signature: "Teacher signature",
     noKey: "The student version has no answer key.", matchHelp: "Draw lines to match", recordHelp: "Say it to your teacher",
   },

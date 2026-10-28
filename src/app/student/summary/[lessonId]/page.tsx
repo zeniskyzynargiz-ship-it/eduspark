@@ -4,7 +4,7 @@ import { requireStudent } from "@/lib/student-data";
 import { studentFacts } from "@/lib/summary-facts";
 import { StudentShell } from "@/components/student/StudentShell";
 import { SummaryVideo } from "@/components/SummaryVideo";
-import { AutoPrint, PrintButton } from "@/components/AutoPrint";
+import { PrintButton } from "@/components/AutoPrint";
 import { studentSlides, INTEREST_IMG } from "@/lib/summary";
 
 export default async function StudentSummaryPage({ params, searchParams }: { params: Promise<{ lessonId: string }>; searchParams: Promise<{ print?: string }> }) {
@@ -20,10 +20,10 @@ export default async function StudentSummaryPage({ params, searchParams }: { par
 
   return (
     <StudentShell st={st} d={d}>
-      <AutoPrint when={sp.print === "1"} />
+      <div id="pdf-root">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">{d.summary.title}</h1>
-        {sp.print === "1" && <PrintButton label={d.print.printBtn} />}
+        {sp.print === "1" && <PrintButton label={d.print.printBtn} fileName={`eduspark-${st.firstName}`} />}
       </div>
       <p className="text-sm text-muted" lang="en">{lesson.topic}</p>
       {!enough ? (
@@ -37,6 +37,7 @@ export default async function StudentSummaryPage({ params, searchParams }: { par
           <SummaryVideo title={`${st.firstName}: ${d.summary.title}`} subtitle={lesson.topic} slides={slides} pdfHref={`/student/summary/${lessonId}?print=1`} scriptUrl={`/api/summary/script?scope=student&lesson=${lessonId}`} allowPhoto fileName={`eduspark-${st.firstName}`} />
         </div>
       )}
+      </div>
     </StudentShell>
   );
 }

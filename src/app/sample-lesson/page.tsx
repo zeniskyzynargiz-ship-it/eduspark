@@ -4,7 +4,7 @@ import { getDict } from "@/lib/i18n/server";
 import { pick } from "@/lib/i18n";
 import { sampleLesson } from "@/lib/sample";
 import { TaskPreview } from "@/components/TaskPreview";
-import { AutoPrint, PrintButton } from "@/components/AutoPrint";
+import { PrintButton } from "@/components/AutoPrint";
 import { SummaryVideo } from "@/components/SummaryVideo";
 import { LessonPlanTable, CriteriaTable } from "@/components/LessonTables";
 import { interestLabel } from "@/lib/survey";
@@ -22,11 +22,12 @@ export default async function SampleLessonPage({ searchParams }: { searchParams:
   const lesson = sampleLesson(d.sample.demoObjective, d.sample.demoTopic);
   return (
     <PublicShell>
-      <AutoPrint when={sp.print === "1"} />
+      <div id="pdf-root">
       <div className="flex flex-wrap items-center gap-3 justify-between">
         <h1 className="text-3xl sm:text-4xl font-bold">{d.sample.pageTitle}</h1>
-        <PrintButton label={d.print.printBtn} />
+        <PrintButton label={d.print.printBtn} fileName="eduspark-sabaq-ulgisi" />
       </div>
+      {sp.print === "1" && <p className="no-print text-sm text-muted mt-2">{d.print.pdfHint}</p>}
       <dl className="card p-5 mt-4 grid sm:grid-cols-3 gap-3 text-sm">
         <div><dt className="text-muted">{d.sample.topic}</dt><dd className="font-semibold" lang="en">{d.sample.demoTopic}</dd></div>
         <div className="sm:col-span-2"><dt className="text-muted">{d.sample.objective}</dt><dd className="font-semibold">{d.sample.demoObjective}</dd></div>
@@ -62,6 +63,7 @@ export default async function SampleLessonPage({ searchParams }: { searchParams:
         <h2 className="text-xl font-bold mb-3">{d.teacher.criteria}</h2>
         <CriteriaTable criteria={lesson.criteria} d={d} lang={lang} />
       </section>
+      </div>
       <section className="card p-5 mt-4 no-print" id="video">
         <h2 className="text-xl font-bold mb-3">{d.home.videoTitle}</h2>
         <div className="relative w-full max-w-sm aspect-video rounded-xl overflow-hidden mb-3">

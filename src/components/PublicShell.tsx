@@ -8,9 +8,9 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
   const loggedIn = await isTeacherSignedIn();
   return (
     <>
-      <SiteHeader loggedIn={loggedIn} />
+      <div className="no-print"><SiteHeader loggedIn={loggedIn} /></div>
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8">{children}</main>
-      <SiteFooter d={d} />
+      <div className="no-print"><SiteFooter d={d} /></div>
     </>
   );
 }
